@@ -1,0 +1,34 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+.idea
+.husky
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+
+# Local env files
+.env
+.env.*
+!.env.example
+!.env.local
+!.env.dev
+!.env.prod
+
+.qodo
+docker-compose.local.yml
+package-lock.json
+yarn.lock

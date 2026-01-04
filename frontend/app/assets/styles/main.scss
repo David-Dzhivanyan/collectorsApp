@@ -1,0 +1,15 @@
+@import "variables";
+@import "mixins";
+
+body {
+  font-family: 'Roboto', 'sans-serif';
+  color: $text100;
+
+  a, button {
+    color: $text100;
+  }
+
+  svg {
+      fill: $text100;
+  }
+}

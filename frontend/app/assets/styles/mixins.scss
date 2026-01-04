@@ -1,0 +1,15 @@
+//titles
+@mixin header-1 {
+  font-size: 32px;
+  line-height: 1.5;
+}
+
+@mixin header-2 {
+  font-size: 28px;
+  line-height: 1.5;
+}
+
+@mixin header-3 {
+  font-size: 20px;
+  line-height: 1.5;
+}
