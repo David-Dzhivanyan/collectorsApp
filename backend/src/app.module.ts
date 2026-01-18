@@ -18,6 +18,7 @@ import { CollectionModule } from './collection/collection.module';
       database: 'testdb',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      dropSchema: false,
     }),
     StringsModule,
     AuthModule,

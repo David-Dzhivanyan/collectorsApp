@@ -4,14 +4,19 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { CollectionTypesEntity } from './collectionTypes.entity';
 
 @Entity()
+@Unique(['collection_type_id', 'user_id', 'name'])
 export class UserCollectionsEntity {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
+  name: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

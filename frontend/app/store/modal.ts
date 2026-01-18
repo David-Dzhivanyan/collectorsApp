@@ -1,4 +1,11 @@
-export type ModalName = 'login' | 'confirm' | 'register'
+export type ModalName = 'login'
+  | 'confirm'
+  | 'register'
+  | 'createType'
+  | 'collectionType'
+  | 'createField'
+  | 'createUserCollection'
+  | 'collectionItems'
 
 export const useModalStore = defineStore('modal', () => {
     const name = ref<ModalName | null>(null)

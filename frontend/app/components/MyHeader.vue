@@ -5,10 +5,25 @@
         <icons-logo class="logo" />
         CollectorsApp
       </nuxt-link>
+
+      <div class="links">
+        <nuxt-link to="/my-collections" class="link-item">
+          Мои коллекции
+        </nuxt-link>
+        <nuxt-link to="/collection-type" class="link-item">
+          Типы коллекций
+        </nuxt-link>
+        <nuxt-link to="/field-list" class="link-item">
+          Поля коллекций
+        </nuxt-link>
+      </div>
+
       <div class="navs">
         <nuxt-link to="/profile" class="profile-link">
+          <div class="profile-icon">
+            <icons-profile class="profile" />
+          </div>
           {{ currentUser?.username }}
-          <icons-profile class="profile" />
         </nuxt-link>
         <ui-btn class="entry-btn" @click="handleEntry">
           {{ isAuth ? 'Выйти' : 'Войти' }}
@@ -40,7 +55,7 @@ const handleEntry = async () => {
 <style scoped lang="scss">
 .header {
   width: 100%;
-  box-shadow: $box-shadow-default;
+  box-shadow: $box-shadow-header;
 }
 
 .container {
@@ -51,7 +66,7 @@ const handleEntry = async () => {
 }
 
 .logo-link {
-  font-family: 'Mogra', 'sans-serif';
+  font-family: 'Exo 2', 'sans-serif';
   display: flex;
   align-items: center;
   gap: 8px;
@@ -67,15 +82,16 @@ const handleEntry = async () => {
 
 .navs {
   display: flex;
+  align-items: center;
   gap: 8px;
   height: 100%;
 }
 
 .profile-link {
   display: flex;
+  gap: 8px;
   align-items: center;
   cursor: pointer;
-  height: 30px;
 
   &:hover {
     color: $primary;
@@ -84,6 +100,19 @@ const handleEntry = async () => {
       fill: $primary;
     }
   }
+}
+
+.links {
+  display: flex;
+  gap: 12px;
+}
+
+.profile-icon {
+  background: $gray300;
+  border-radius: 32px;
+  width: 42px;
+  height: 42px;
+  padding: 8px;
 }
 
 .profile {

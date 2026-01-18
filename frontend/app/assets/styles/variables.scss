@@ -4,7 +4,15 @@ $black: var(--black);
 $text100: var(--text100);
 $red400: var(--red400);
 $primary: var(--primary);
+$secondary: var(--secondary);
+$gray200: var(--gray200);
+$gray300: var(--gray300);
+$gray900: var(--gray900);
+$gray800: var(--gray800);
+$gray600: var(--gray600);
 
 
 //box-shadow
 $box-shadow-default: 0 5px 10px -2px rgba(34, 60, 80, 0.2);
+$box-shadow-secondary: 0px 28px 60px 0px #3d486566;
+$box-shadow-header: 0px 4px 60px 0px #3D486512;

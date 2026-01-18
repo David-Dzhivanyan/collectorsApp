@@ -13,5 +13,6 @@
   max-width: 1420px;
   margin: 0 auto;
   padding: 16px 32px;
+  width: 100%;
 }
 </style>

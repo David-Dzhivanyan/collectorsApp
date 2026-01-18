@@ -4,11 +4,13 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { CollectionTypesEntity } from './collectionTypes.entity';
 import { FieldsEntity } from './fields.entity';
 
 @Entity()
+@Unique(['collection_type_id', 'field_id'])
 export class CollectionTypeFieldsEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -21,6 +23,6 @@ export class CollectionTypeFieldsEntity {
   @JoinColumn({ name: 'field_id' })
   field_id: FieldsEntity;
 
-  @Column()
+  @Column({ nullable: true })
   is_required: boolean;
 }

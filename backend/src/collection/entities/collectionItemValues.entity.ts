@@ -9,7 +9,7 @@ import { FieldsEntity } from './fields.entity';
 import { CollectionItemsEntity } from './collectionItems.entity';
 
 @Entity()
-export class CollectionTypeFieldsEntity {
+export class CollectionItemValuesEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,18 +21,18 @@ export class CollectionTypeFieldsEntity {
   @JoinColumn({ name: 'field_id' })
   field_id: FieldsEntity;
 
-  @Column({ nullable: true })
-  value_string?: string;
-
-  @Column({ nullable: true })
-  value_number?: number;
-
-  @Column({ nullable: true })
-  value_boolean?: boolean;
-
-  @Column({ type: 'timestamp', nullable: true })
-  value_date?: Date;
+  // @Column({ nullable: true })
+  // value_string?: string;
+  //
+  // @Column({ nullable: true })
+  // value_number?: number;
+  //
+  // @Column({ nullable: true })
+  // value_boolean?: boolean;
+  //
+  // @Column({ type: 'timestamp', nullable: true })
+  // value_date?: Date;
 
   @Column({ type: 'jsonb', nullable: true })
-  value_select?: string[];
+  value?: string;
 }

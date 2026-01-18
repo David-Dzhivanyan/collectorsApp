@@ -26,9 +26,10 @@ const { close } = useModalStore()
 .modal-base {
   min-width: 300px;
   background-color: $white;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: $box-shadow-default;
+  padding: 26px 32px;
+  border-radius: 24px;
+  box-shadow: $box-shadow-secondary;
+  border: 1px solid $gray300;
 
   .header {
     display: flex;

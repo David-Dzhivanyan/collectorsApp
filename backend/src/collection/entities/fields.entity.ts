@@ -16,7 +16,7 @@ export class FieldsEntity {
   name: string;
 
   @Column()
-  slug: string;
+  description: string;
 
   @Column()
   field_type: 'string' | 'number' | 'date' | 'select' | 'boolean';

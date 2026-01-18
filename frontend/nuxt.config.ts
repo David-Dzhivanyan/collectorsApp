@@ -20,9 +20,9 @@ export default defineNuxtConfig({
   },
   googleFonts: {
     families: {
-      Mogra: [400, 500, 700],
-      Roboto: [400, 500, 700],
-      Lato: true,
+      'Exo 2': [400, 500, 700],
+      'Roboto': [400, 500, 700],
+      'Lato': true,
     },
     display: 'swap',
   },

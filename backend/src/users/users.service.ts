@@ -38,6 +38,7 @@ export class UsersService {
       return null;
     }
 
+    // return this.userRepo.findOne({ where: { username }, select: ['password'] });
     return this.userRepo.findOne({ where: { username } });
   }
 

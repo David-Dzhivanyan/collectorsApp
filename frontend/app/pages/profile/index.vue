@@ -12,9 +12,6 @@
         {{ currentUser.email }}
       </a>
     </div>
-    <div class="collection">
-      collectors
-    </div>
   </container>
 </template>
 
@@ -37,12 +34,5 @@ const { currentUser } = storeToRefs(useUserStore())
 
 .title {
   @include header-3;
-}
-
-.collection {
-  box-shadow: $box-shadow-default;
-  padding: 16px 20px;
-  border-radius: 8px;
-  margin-top: 16px;
 }
 </style>

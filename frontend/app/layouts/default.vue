@@ -1,7 +1,10 @@
 <template>
   <div class="layout">
-    <MyHeader />
-    <slot />
+    <div class="content">
+      <MyHeader />
+      <slot />
+      <my-footer />
+    </div>
     <Modals />
     <notifications />
   </div>
@@ -19,5 +22,14 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .layout {
+  min-height: 100vh;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 100vh;
 }
 </style>

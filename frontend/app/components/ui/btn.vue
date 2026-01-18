@@ -16,7 +16,8 @@ const props = withDefaults(defineProps<BtnProps>(), {})
 .button {
   cursor: pointer;
   padding: 4px 8px;
-  box-shadow: $box-shadow-default;
+  background: linear-gradient(225deg, #40c6ff 0%, #4086f1 50.52%, #8458ff 100%);
+  color: white;
 
   &:hover {
     opacity: 0.8;

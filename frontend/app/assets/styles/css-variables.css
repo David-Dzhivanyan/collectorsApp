@@ -1,7 +1,13 @@
 body {
-    --primary: #800080;
+    --primary: #8458ff;
+    --secondary: #FF6F32;
     --white: #ffffff;
     --black: #000000;
     --text100: #333333;
     --red400: #DC3545;
+    --gray200: #F7F9FC;
+    --gray300: #F1F4F9;
+    --gray600: #959FB2;
+    --gray900: #101426;
+    --gray800: #181D33;
 }
