@@ -1,9 +1,14 @@
 <template>
-  <div class="text-field" :class="{ ['error']: isError }">
-    <label v-if="label" class="label" :for="id">
-      {{ label }}
-    </label>
-    <input :id="id" v-model="model" class="input" :type="type" :name="id" :placeholder="placeholder" />
+  <div class="text-field" :class="{ 'text-field--error': isError }">
+    <label v-if="label" class="text-field__label" :for="id">{{ label }}</label>
+    <input
+      :id="id"
+      v-model="model"
+      class="text-field__input"
+      :type="type"
+      :name="id"
+      :placeholder="placeholder"
+    />
   </div>
 </template>
 
@@ -29,29 +34,40 @@ const model = defineModel<string | number>()
 .text-field {
   display: flex;
   flex-direction: column;
-}
+  gap: 4px;
 
-.label {
-  margin-bottom: 8px;
-}
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $gray600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
 
-.input {
-  border: 1px solid $gray300;
-  border-radius: 16px;
-  padding: 12px 18px;
-  outline: none;
-}
+  &__input {
+    border: 1.5px solid $gray300;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: $gray900;
+    background: $white;
+    outline: none;
+    transition: border-color 0.15s;
 
-.input:focus {
-  border-color: $primary;
-}
+    &::placeholder {
+      color: $gray600;
+    }
 
-.error {
-  .input {
+    &:focus {
+      border-color: $primary;
+    }
+  }
+
+  &--error &__input {
     border-color: $red400;
   }
 
-  .label {
+  &--error &__label {
     color: $red400;
   }
 }
