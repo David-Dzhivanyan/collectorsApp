@@ -1,12 +1,14 @@
 <template>
-  <div class="modal-base">
-    <div class="header">
-      <div class="title">
-        {{ title }}
-      </div>
-      <icons-close class="close" @click="close" />
+  <div class="modal">
+    <div class="modal__header">
+      <h3 class="modal__title">{{ title }}</h3>
+      <button class="modal__close" @click="close">
+        <icons-close class="modal__close-icon" />
+      </button>
     </div>
-    <slot />
+    <div class="modal__body">
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -23,28 +25,54 @@ const { close } = useModalStore()
 </script>
 
 <style scoped lang="scss">
-.modal-base {
-  min-width: 300px;
-  background-color: $white;
-  padding: 26px 32px;
-  border-radius: 24px;
+.modal {
+  background: $white;
+  border-radius: 16px;
   box-shadow: $box-shadow-secondary;
   border: 1px solid $gray300;
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
 
-  .header {
+  &__header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid $gray300;
   }
 
-  .title {
+  &__title {
     @include header-3;
+    font-weight: 700;
+    color: $gray900;
   }
 
-  .close {
+  &__close {
+    background: none;
+    border: none;
     cursor: pointer;
-    height: 100%;
-    width: 32px;
+    padding: 4px;
+    color: $gray600;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+      color: $gray900;
+      background: $gray300;
+    }
+  }
+
+  &__close-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &__body {
+    padding: 20px 24px 24px;
   }
 }
 </style>

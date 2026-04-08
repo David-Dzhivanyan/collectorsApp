@@ -3,13 +3,9 @@
     <div class="content">
       <ui-text-field v-model="formValues.username" label="Логин" />
       <ui-text-field v-model="formValues.password" label="Пароль" type="password" />
-      <div class="btns">
-        <ui-btn class="btn" @click="handleLogin">
-          Войти
-        </ui-btn>
-        <div class="link" @click="handleClick">
-          Я не зарегистрирован
-        </div>
+      <div class="footer">
+        <ui-btn @click="handleLogin">Войти</ui-btn>
+        <span class="link" @click="handleClick">Я не зарегистрирован</span>
       </div>
     </div>
   </modals-base>
@@ -23,7 +19,7 @@ import { useModalStore } from '@/store/modal'
 const { login } = useAuthStore()
 const { close, open } = useModalStore()
 
-const formValues = ref<LoginData>({ username: 'opelik417', password: '12421242qwe' })
+const formValues = ref<LoginData>({ username: '', password: '' })
 
 const handleLogin = async () => {
   try {
@@ -34,7 +30,7 @@ const handleLogin = async () => {
   }
 }
 
-const handleClick = async () => {
+const handleClick = () => {
   close()
   open('register')
 }
@@ -45,24 +41,22 @@ const handleClick = async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
 
-  .btns {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-  }
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
 
-  .btn {
-    width: fit-content;
-  }
+.link {
+  font-size: 13px;
+  color: $gray600;
+  cursor: pointer;
 
-  .link {
-    cursor: pointer;
-
-    &:hover {
-      color: $primary;
-    }
+  &:hover {
+    color: $primary;
   }
 }
 </style>

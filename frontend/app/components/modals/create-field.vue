@@ -4,10 +4,8 @@
       <ui-text-field v-model="formValues.name" label="Название" />
       <ui-text-field v-model="formValues.description" label="Описание" />
       <ui-select-field v-model="formValues.field_type" :options="options" label="Тип поля" />
-      <div class="btns">
-        <ui-btn class="btn" @click="handleCreate">
-          Создать
-        </ui-btn>
+      <div class="footer">
+        <ui-btn @click="handleCreate">Создать</ui-btn>
       </div>
     </div>
   </modals-base>
@@ -20,7 +18,6 @@ import { useCollectionStore } from '@/store/collection'
 import { useModalStore } from '@/store/modal'
 
 const { close } = useModalStore()
-
 const { getFields, createField } = useCollectionStore()
 
 const formValues = ref<CreateFieldRequest>({ name: '', description: '', field_type: 'string' })
@@ -32,6 +29,7 @@ const options: SelectFieldProps['options'] = [
   { value: 'select', label: 'Вариант ответа' },
   { value: 'boolean', label: 'Да/Нет' },
 ]
+
 const handleCreate = async () => {
   await createField(formValues.value)
   await getFields()
@@ -44,24 +42,11 @@ const handleCreate = async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
 
-  .btns {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-  }
-
-  .btn {
-    width: fit-content;
-  }
-
-  .link {
-    cursor: pointer;
-
-    &:hover {
-      color: $primary;
-    }
-  }
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
 }
 </style>

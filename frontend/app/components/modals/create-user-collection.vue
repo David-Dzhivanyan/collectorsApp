@@ -1,17 +1,16 @@
 <template>
-  <modals-base title="Создать коллекцию">
+  <modals-base title="Новая коллекция">
     <div class="content">
       <ui-select-field
         v-model="formValues.collection_type_id"
         :options="options"
         label="Тип коллекции"
-        @update:model-value="(value: number | string | null) => onChangeType(value)"
+        placeholder="Выберите тип"
+        @update:model-value="(value) => onChangeType(value)"
       />
       <ui-text-field v-model="formValues.name" label="Название коллекции" />
-      <div class="btns">
-        <ui-btn class="btn" @click="handleCreate">
-          Создать
-        </ui-btn>
+      <div class="footer">
+        <ui-btn @click="handleCreate">Создать</ui-btn>
       </div>
     </div>
   </modals-base>
@@ -24,35 +23,28 @@ import { useModalStore } from '@/store/modal'
 import { useUserStore } from '@/store/user'
 
 const { close } = useModalStore()
-
 const { collectionTypeList } = storeToRefs(useCollectionStore())
 const { getCollectionTypes, createUserCollection, getUserCollections } = useCollectionStore()
 const { currentUser } = storeToRefs(useUserStore())
 
-const formValues = ref<{ name: string, collection_type_id: number }>({ name: '', collection_type_id: -1 })
+const formValues = ref<{ name: string, collection_type_id: number | null }>({ name: '', collection_type_id: null })
 
-const options = computed<SelectFieldProps['options']>(() => {
-  const result: SelectFieldProps['options'] = []
-  collectionTypeList.value?.forEach(item => {
-    result.push({ value: item.id, label: item.name })
-  })
-
-  return result
-})
+const options = computed<SelectFieldProps['options']>(() =>
+  collectionTypeList.value?.map(item => ({ value: item.id, label: item.name })) ?? []
+)
 
 const handleCreate = async () => {
-  await createUserCollection(formValues.value)
+  if (!formValues.value.collection_type_id) return
+  await createUserCollection(formValues.value as { name: string, collection_type_id: number })
   if (currentUser.value) {
     await getUserCollections(currentUser.value.id)
   }
+  close()
 }
 
-const onChangeType = async (option: number | string | null) => {
-  const currentOption = options.value.find(item => {
-    return item.value === option
-  })
-
-  formValues.value.name = currentOption?.label || ''
+const onChangeType = (option: number | string | null) => {
+  const match = options.value.find(item => item.value === option)
+  formValues.value.name = match?.label || ''
 }
 
 onMounted(async () => {
@@ -67,24 +59,11 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
 
-  .btns {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-  }
-
-  .btn {
-    width: fit-content;
-  }
-
-  .link {
-    cursor: pointer;
-
-    &:hover {
-      color: $primary;
-    }
-  }
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
 }
 </style>

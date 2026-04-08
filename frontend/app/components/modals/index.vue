@@ -1,7 +1,9 @@
 <template>
-  <div v-if="modal.name" class="modal-backdrop" @click.self="close">
-    <component :is="currentModal" v-bind="modal.props" />
-  </div>
+  <Transition name="modal">
+    <div v-if="modal.name" class="modal-backdrop" @click.self="close">
+      <component :is="currentModal" v-bind="modal.props" />
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -18,7 +20,6 @@ import { useModalStore } from '@/store/modal'
 
 const modal = useModalStore()
 
-// Здесь ты импортируешь все возможные модалки
 const modalsMap: Record<ModalName, any> = {
   login: LoginModal,
   confirm: ConfirmModal,
@@ -43,10 +44,33 @@ function close() {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10;
+  padding: 16px;
+}
+
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.modal-enter-active .modal,
+.modal-leave-active .modal {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from :deep(.modal),
+.modal-leave-to :deep(.modal) {
+  transform: scale(0.96) translateY(8px);
+  opacity: 0;
 }
 </style>
