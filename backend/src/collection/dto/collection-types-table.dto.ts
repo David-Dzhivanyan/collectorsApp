@@ -4,6 +4,7 @@ export interface CollectionTypeFieldInfo {
   name: string;
   field_type: string;
   is_required: boolean;
+  options?: string[];
 }
 
 export interface CollectionTypeTableRow {

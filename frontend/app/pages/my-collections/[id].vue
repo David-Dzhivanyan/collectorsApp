@@ -13,6 +13,7 @@
       </div>
     </div>
 
+    <!-- Create form -->
     <div v-if="isFormOpen && tableData" class="form">
       <div class="form__fields">
         <ui-text-field v-model="form.name" label="Название *" />
@@ -54,25 +55,64 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in tableData.items" :key="item.id">
-              <td>{{ item.name }}</td>
-              <td v-for="field in tableData.fields" :key="field.id">
-                <template v-if="field.field_type === 'boolean'">
-                  {{ item.values[String(field.id)] === true ? '✓' : item.values[String(field.id)] === false ? '✗' : '—' }}
-                </template>
-                <template v-else-if="field.field_type === 'date' && item.values[String(field.id)]">
-                  {{ new Date(item.values[String(field.id)] as string).toLocaleDateString('ru-RU') }}
-                </template>
-                <template v-else>
-                  {{ item.values[String(field.id)] ?? '—' }}
-                </template>
-              </td>
-              <td class="col-action">
-                <button class="delete-btn" title="Удалить" @click="handleDeleteItem(item.id)">
-                  <icons-trash class="delete-btn__icon" />
-                </button>
-              </td>
-            </tr>
+            <template v-for="item in tableData.items" :key="item.id">
+              <!-- Normal row -->
+              <tr class="data-row" :class="{ 'data-row--editing': editingItemId === item.id }">
+                <td>{{ item.name }}</td>
+                <td v-for="field in tableData.fields" :key="field.id">
+                  <template v-if="field.field_type === 'boolean'">
+                    {{ item.values[String(field.id)] === true ? '✓' : item.values[String(field.id)] === false ? '✗' : '—' }}
+                  </template>
+                  <template v-else-if="field.field_type === 'date' && item.values[String(field.id)]">
+                    {{ new Date(item.values[String(field.id)] as string).toLocaleDateString('ru-RU') }}
+                  </template>
+                  <template v-else>
+                    {{ item.values[String(field.id)] ?? '—' }}
+                  </template>
+                </td>
+                <td class="col-action">
+                  <div class="row-actions">
+                    <button
+                      class="icon-btn"
+                      :class="{ 'icon-btn--active': editingItemId === item.id }"
+                      title="Редактировать"
+                      @click="editingItemId === item.id ? cancelEditItem() : startEditItem(item)"
+                    >
+                      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button class="icon-btn icon-btn--danger" title="Удалить" @click="handleDeleteItem(item.id)">
+                      <icons-trash class="icon-btn__icon" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Edit row (inline expanded) -->
+              <tr v-if="editingItemId === item.id" class="edit-row">
+                <td :colspan="tableData.fields.length + 2">
+                  <div class="edit-panel">
+                    <div class="edit-panel__fields">
+                      <ui-text-field v-model="editForm.name" label="Название *" />
+                      <ui-field-input
+                        v-for="field in tableData.fields"
+                        :key="field.id"
+                        :field="field"
+                        :model-value="editFieldValues[field.id]"
+                        :is-error="!!editFieldErrors[field.id]"
+                        :error-message="editFieldErrors[field.id]"
+                        @update:model-value="editFieldValues[field.id] = $event"
+                      />
+                    </div>
+                    <div class="edit-panel__footer">
+                      <ui-btn :disabled="!editForm.name" @click="saveEditItem(item.id)">Сохранить</ui-btn>
+                      <button class="cancel-btn" @click="cancelEditItem">Отмена</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -82,7 +122,7 @@
 
 <script setup lang="ts">
 import { useCollectionStore } from '@/store/collection'
-import type { CollectionTableResponse } from '@/store/collection'
+import type { CollectionTableResponse, CollectionTableItem } from '@/store/collection'
 
 const route = useRoute()
 const collectionStore = useCollectionStore()
@@ -94,9 +134,16 @@ const tableData = ref<CollectionTableResponse | null>(null)
 const collectionName = ref('')
 const collectionTypeName = ref('')
 
+// Create form
 const form = ref({ name: '' })
 const fieldValues = ref<Record<number, unknown>>({})
 const fieldErrors = ref<Record<number, string>>({})
+
+// Edit form
+const editingItemId = ref<number | null>(null)
+const editForm = ref({ name: '' })
+const editFieldValues = ref<Record<number, unknown>>({})
+const editFieldErrors = ref<Record<number, string>>({})
 
 const { userCollections, currentUserCollection } = storeToRefs(collectionStore)
 
@@ -104,42 +151,38 @@ const loadTable = async () => {
   tableData.value = await collectionStore.getCollectionTable(id)
 }
 
-const validateFields = (): boolean => {
-  fieldErrors.value = {}
+const validateFields = (values: Record<number, unknown>, errors: Record<number, string>): boolean => {
   let valid = true
-
   for (const field of tableData.value?.fields ?? []) {
-    const val = fieldValues.value[field.id]
+    const val = values[field.id]
     const isEmpty = val === undefined || val === null || val === ''
-
     if (field.is_required && isEmpty) {
-      fieldErrors.value[field.id] = 'Обязательное поле'
+      errors[field.id] = 'Обязательное поле'
       valid = false
       continue
     }
-
     if (isEmpty) continue
-
     if (field.field_type === 'number' && isNaN(Number(val))) {
-      fieldErrors.value[field.id] = 'Введите корректное число'
+      errors[field.id] = 'Введите корректное число'
       valid = false
     }
     if (field.field_type === 'date' && isNaN(new Date(val as string).getTime())) {
-      fieldErrors.value[field.id] = 'Введите корректную дату'
+      errors[field.id] = 'Введите корректную дату'
       valid = false
     }
   }
-
   return valid
 }
 
 const handleDeleteItem = async (itemId: number) => {
+  if (editingItemId.value === itemId) cancelEditItem()
   await collectionStore.deleteCollectionItem(itemId)
   await loadTable()
 }
 
 const handleCreate = async () => {
-  if (!validateFields()) return
+  fieldErrors.value = {}
+  if (!validateFields(fieldValues.value, fieldErrors.value)) return
 
   const item = await collectionStore.createCollectionItem({ name: form.value.name, user_collection_id: id })
   if (item) {
@@ -154,6 +197,41 @@ const handleCreate = async () => {
   fieldValues.value = {}
   fieldErrors.value = {}
   isFormOpen.value = false
+  await loadTable()
+}
+
+const startEditItem = (item: CollectionTableItem) => {
+  editingItemId.value = item.id
+  editForm.value.name = item.name
+  editFieldValues.value = {}
+  editFieldErrors.value = {}
+  for (const field of tableData.value?.fields ?? []) {
+    const raw = item.values[String(field.id)]
+    editFieldValues.value[field.id] = raw !== undefined ? raw : (field.field_type === 'boolean' ? false : '')
+  }
+}
+
+const cancelEditItem = () => {
+  editingItemId.value = null
+  editForm.value.name = ''
+  editFieldValues.value = {}
+  editFieldErrors.value = {}
+}
+
+const saveEditItem = async (itemId: number) => {
+  editFieldErrors.value = {}
+  if (!validateFields(editFieldValues.value, editFieldErrors.value)) return
+
+  const values = (tableData.value?.fields ?? [])
+    .map(field => ({ field_id: field.id, value: editFieldValues.value[field.id] }))
+    .filter(v => v.value !== undefined && v.value !== null && v.value !== '')
+
+  await collectionStore.updateCollectionItem(itemId, {
+    name: editForm.value.name,
+    values,
+  })
+
+  cancelEditItem()
   await loadTable()
 }
 
@@ -272,22 +350,72 @@ onMounted(async () => {
   tbody tr:last-child td {
     border-bottom: none;
   }
+}
 
-  tbody tr:hover td {
+.data-row {
+  &:hover td {
     background: $gray200;
+  }
+
+  &--editing td {
+    background: rgba(132, 88, 255, 0.04);
+  }
+}
+
+.edit-row td {
+  padding: 0;
+  border-bottom: 1px solid $gray300;
+  background: $gray200;
+}
+
+.edit-panel {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+}
+
+.cancel-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: $gray600;
+  cursor: pointer;
+
+  &:hover {
+    color: $gray900;
   }
 }
 
 .col-action {
-  width: 48px;
+  width: 80px;
   text-align: center;
 }
 
-.delete-btn {
+.row-actions {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.icon-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 5px;
   color: $gray600;
   border-radius: 6px;
   display: flex;
@@ -295,14 +423,19 @@ onMounted(async () => {
   justify-content: center;
   transition: color 0.15s, background 0.15s;
 
-  &:hover {
-    color: $red400;
-    background: rgba(220, 53, 69, 0.08);
+  svg, &__icon {
+    width: 15px;
+    height: 15px;
   }
 
-  &__icon {
-    width: 16px;
-    height: 16px;
+  &:hover, &--active {
+    color: $primary;
+    background: rgba(132, 88, 255, 0.08);
+  }
+
+  &--danger:hover {
+    color: $red400;
+    background: rgba(220, 53, 69, 0.08);
   }
 }
 </style>

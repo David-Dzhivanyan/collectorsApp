@@ -57,6 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
                 title: error.response?.data.message,
                 type: 'error',
             })
+          throw e
         }
     }
 

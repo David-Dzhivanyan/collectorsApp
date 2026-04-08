@@ -21,6 +21,7 @@
 import type { RegData } from '@/types'
 import { useAuthStore } from '@/store/auth'
 import { useModalStore } from '@/store/modal'
+import { notify } from '@kyvg/vue3-notification'
 
 const { register } = useAuthStore()
 const { close, open } = useModalStore()
@@ -36,9 +37,11 @@ const errors = ref<Record<keyof FormData, boolean>>({
   firstName: false, lastName: false, phone: false, repeatPassword: false,
 })
 
+const requiredFields: (keyof FormData)[] = ['email', 'firstName', 'lastName', 'username', 'password', 'repeatPassword']
+
 const handleReg = async () => {
-  Object.entries(formValues.value).forEach(([key, value]) => {
-    if (value === '') errors.value[key as keyof FormData] = true
+  requiredFields.forEach((key) => {
+    if (formValues.value[key] === '') errors.value[key] = true
   })
   if (formValues.value.password !== formValues.value.repeatPassword) {
     errors.value.repeatPassword = true
@@ -46,8 +49,11 @@ const handleReg = async () => {
   if (Object.values(errors.value).some(Boolean)) return
 
   const { repeatPassword, ...data } = formValues.value
-  await register(data)
-  close()
+  try {
+    await register(data)
+    close()
+  } catch (e) {
+  }
 }
 
 const handleClick = () => {

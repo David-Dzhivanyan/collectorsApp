@@ -32,7 +32,6 @@ const { close } = useModalStore()
   border: 1px solid $gray300;
   width: 100%;
   max-width: 520px;
-  overflow: hidden;
 
   &__header {
     display: flex;

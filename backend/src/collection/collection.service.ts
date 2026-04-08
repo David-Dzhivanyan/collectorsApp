@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CollectionTypesEntity } from './entities/collectionTypes.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -16,6 +16,9 @@ import { CreateItemValueDto } from './dto/create-item-value.dto';
 import { CollectionItemValuesEntity } from './entities/collectionItemValues.entity';
 import { CollectionTableResponseDto } from './dto/collection-table.dto';
 import { CollectionTypeTableRow } from './dto/collection-types-table.dto';
+import { UpdateUserCollectionDto } from './dto/update-user-collection.dto';
+import { UpdateCollectionItemDto } from './dto/update-collection-item.dto';
+import { UpdateFieldDto } from './dto/update-field.dto';
 
 @Injectable()
 export class CollectionService {
@@ -157,7 +160,7 @@ export class CollectionService {
       throw new BadRequestException(`Поле ${dto.field_id} не найдено`);
     }
 
-    const normalized = this.validateAndNormalize(field.field_type, dto.value);
+    const normalized = this.validateAndNormalize(field.field_type, dto.value, field.options);
 
     const entity = this.collectionItemValuesRepo.create({
       collection_item_id: { id: dto.collection_item_id },
@@ -171,16 +174,29 @@ export class CollectionService {
   private validateAndNormalize(
     fieldType: FieldsEntity['field_type'],
     raw: unknown,
+    options?: string[],
   ): unknown {
     switch (fieldType) {
-      case 'string':
-      case 'select': {
+      case 'string': {
         if (typeof raw !== 'string' || raw.trim() === '') {
           throw new BadRequestException(
-            `Поле типа "${fieldType}" должно быть непустой строкой`,
+            `Поле типа "string" должно быть непустой строкой`,
           );
         }
         return raw.trim();
+      }
+
+      case 'select': {
+        if (typeof raw !== 'string' || raw.trim() === '') {
+          throw new BadRequestException(`Необходимо выбрать вариант ответа`);
+        }
+        const value = raw.trim();
+        if (options?.length && !options.includes(value)) {
+          throw new BadRequestException(
+            `Значение "${value}" не входит в список допустимых вариантов`,
+          );
+        }
+        return value;
       }
 
       case 'number': {
@@ -269,6 +285,7 @@ export class CollectionService {
       name: ctf.field_id.name,
       field_type: ctf.field_id.field_type,
       is_required: ctf.is_required,
+      options: ctf.field_id.options,
     }));
 
     const valuesByItemId = new Map<number, Record<string, any>>(
@@ -289,6 +306,74 @@ export class CollectionService {
     }));
 
     return { fields, items: shapedItems };
+  }
+
+  async updateUserCollection(id: number, dto: UpdateUserCollectionDto): Promise<void> {
+    await this.userCollectionsRepo.update(id, { name: dto.name });
+  }
+
+  async deleteUserCollection(id: number): Promise<void> {
+    const items = await this.collectionItemsRepo.find({
+      where: { user_collection_id: { id } },
+    });
+    for (const item of items) {
+      await this.collectionItemValuesRepo.delete({ collection_item_id: { id: item.id } });
+    }
+    if (items.length) {
+      await this.collectionItemsRepo.delete(items.map((i) => i.id));
+    }
+    await this.userCollectionsRepo.delete(id);
+  }
+
+  async updateCollectionItem(id: number, dto: UpdateCollectionItemDto): Promise<void> {
+    if (dto.name) {
+      await this.collectionItemsRepo.update(id, { name: dto.name });
+    }
+
+    if (dto.values?.length) {
+      for (const v of dto.values) {
+        const field = await this.fieldsRepo.findOne({ where: { id: v.field_id } });
+        if (!field) throw new NotFoundException(`Field ${v.field_id} not found`);
+
+        const normalized = this.validateAndNormalize(field.field_type, v.value, field.options);
+
+        const existing = await this.collectionItemValuesRepo.findOne({
+          where: {
+            collection_item_id: { id },
+            field_id: { id: v.field_id },
+          },
+        });
+
+        if (existing) {
+          await this.collectionItemValuesRepo.update(existing.id, { value: normalized as any });
+        } else {
+          const entity = this.collectionItemValuesRepo.create({
+            collection_item_id: { id },
+            field_id: { id: v.field_id },
+            value: normalized,
+          });
+          await this.collectionItemValuesRepo.save(entity);
+        }
+      }
+    }
+  }
+
+  async updateField(id: number, dto: UpdateFieldDto): Promise<void> {
+    const update: Partial<FieldsEntity> = {};
+    if (dto.name !== undefined) update.name = dto.name;
+    if (dto.description !== undefined) update.description = dto.description;
+    if (Object.keys(update).length) {
+      await this.fieldsRepo.update(id, update);
+    }
+  }
+
+  async deleteField(fieldId: number): Promise<void> {
+    // Delete all item values referencing this field
+    await this.collectionItemValuesRepo.delete({ field_id: { id: fieldId } });
+    // Remove from all collection types
+    await this.collectionTypeFieldsRepo.delete({ field_id: { id: fieldId } });
+    // Delete the field itself
+    await this.fieldsRepo.delete(fieldId);
   }
 
   async deleteCollectionItem(itemId: number): Promise<void> {
@@ -316,6 +401,7 @@ export class CollectionService {
           name: ctf.field_id.name,
           field_type: ctf.field_id.field_type,
           is_required: ctf.is_required,
+          options: ctf.field_id.options,
         })),
     }));
   }

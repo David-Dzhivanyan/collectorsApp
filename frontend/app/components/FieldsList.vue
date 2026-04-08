@@ -14,13 +14,40 @@
         v-for="field in fieldsList"
         :key="field.id"
         class="card"
-        @click="handleClick(field)"
+        :class="{ 'card--editing': editingId === field.id }"
       >
-        <div class="card__main">
-          <span class="card__name">{{ field.name }}</span>
-          <span v-if="field.description" class="card__description">{{ field.description }}</span>
-        </div>
-        <span class="card__badge">{{ field.field_type }}</span>
+        <!-- Edit form -->
+        <template v-if="editingId === field.id">
+          <div class="card__edit">
+            <ui-text-field v-model="editForm.name" label="Название" />
+            <ui-text-field v-model="editForm.description" label="Описание" />
+          </div>
+          <div class="card__edit-actions">
+            <ui-btn @click="saveEdit(field.id)">Сохранить</ui-btn>
+            <button class="cancel-btn" @click="cancelEdit">Отмена</button>
+          </div>
+        </template>
+
+        <!-- Normal view -->
+        <template v-else>
+          <div class="card__main">
+            <span class="card__name">{{ field.name }}</span>
+            <span v-if="field.description" class="card__description">{{ field.description }}</span>
+          </div>
+          <div class="card__right">
+            <span class="card__badge">{{ field.field_type }}</span>
+            <div v-if="isAuth" class="card__actions">
+              <button class="icon-btn" title="Редактировать" @click.stop="startEdit(field)">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button class="icon-btn icon-btn--danger" title="Удалить" @click.stop="handleDelete(field.id)">
+                <icons-trash class="icon-btn__icon" />
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </ui-page-section>
@@ -32,20 +59,36 @@ import { useCollectionStore } from '@/store/collection'
 import { useModalStore } from '@/store/modal'
 import { useAuthStore } from '@/store/auth'
 
-const { getFields, createCurrentCollectionField, getCurrentCollectionTypeField } = useCollectionStore()
-const { fieldsList, currentCollection } = storeToRefs(useCollectionStore())
+const collectionStore = useCollectionStore()
+const { getFields, updateField, deleteField } = collectionStore
+const { fieldsList } = storeToRefs(collectionStore)
 const { open } = useModalStore()
 const { isAuth } = storeToRefs(useAuthStore())
 
-const handleCreateField = () => {
-  open('createField')
+const editingId = ref<number | null>(null)
+const editForm = ref({ name: '', description: '' })
+
+const handleCreateField = () => open('createField')
+
+const startEdit = (field: Field) => {
+  editingId.value = field.id
+  editForm.value = { name: field.name, description: field.description ?? '' }
 }
 
-const handleClick = async (field: Field) => {
-  await createCurrentCollectionField({ collection_type_id: currentCollection.value?.id || 0, field_id: field.id })
-  if (currentCollection.value) {
-    await getCurrentCollectionTypeField(currentCollection.value.id)
-  }
+const cancelEdit = () => {
+  editingId.value = null
+  editForm.value = { name: '', description: '' }
+}
+
+const saveEdit = async (id: number) => {
+  await updateField(id, { name: editForm.value.name, description: editForm.value.description })
+  await getFields()
+  cancelEdit()
+}
+
+const handleDelete = async (id: number) => {
+  await deleteField(id)
+  await getFields()
 }
 
 onMounted(() => {
@@ -67,18 +110,42 @@ onMounted(() => {
   padding: 14px 20px;
   border: 1px solid $gray300;
   border-radius: 10px;
-  cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
+  gap: 12px;
 
-  &:hover {
+  &:hover:not(&--editing) {
     border-color: $primary;
     box-shadow: 0 2px 12px rgba(132, 88, 255, 0.12);
+  }
+
+  &--editing {
+    flex-direction: column;
+    align-items: stretch;
+    border-color: $primary;
+  }
+
+  &__edit {
+    display: flex;
+    gap: 10px;
+
+    > * {
+      flex: 1;
+    }
+  }
+
+  &__edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-end;
   }
 
   &__main {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
+    min-width: 0;
   }
 
   &__name {
@@ -91,6 +158,13 @@ onMounted(() => {
     color: $gray600;
   }
 
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
   &__badge {
     font-size: 12px;
     font-weight: 600;
@@ -99,7 +173,51 @@ onMounted(() => {
     padding: 3px 10px;
     border-radius: 20px;
     white-space: nowrap;
-    margin-left: 16px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 2px;
+  }
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: $gray600;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+
+  svg, &__icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  &:hover {
+    color: $primary;
+    background: rgba(132, 88, 255, 0.08);
+  }
+
+  &--danger:hover {
+    color: $red400;
+    background: rgba(220, 53, 69, 0.08);
+  }
+}
+
+.cancel-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: $gray600;
+  cursor: pointer;
+
+  &:hover {
+    color: $gray900;
   }
 }
 

@@ -3,6 +3,7 @@ export interface CollectionTableFieldDto {
   name: string;
   field_type: string;
   is_required: boolean;
+  options?: string[];
 }
 
 export interface CollectionTableItemDto {

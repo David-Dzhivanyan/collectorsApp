@@ -31,7 +31,18 @@
     <span v-if="isError && errorMessage" class="field-input__error">{{ errorMessage }}</span>
   </div>
 
-  <!-- string | number | select -->
+  <!-- select with predefined options -->
+  <div v-else-if="field.field_type === 'select' && field.options?.length" class="field-input">
+    <ui-select-field
+      :label="field.name + (field.is_required ? ' *' : '')"
+      :options="selectOptions"
+      :model-value="(modelValue as string | null)"
+      @update:model-value="emit('update:modelValue', $event)"
+    />
+    <span v-if="isError && errorMessage" class="field-input__error">{{ errorMessage }}</span>
+  </div>
+
+  <!-- string | number -->
   <div v-else class="field-input">
     <ui-text-field
       :label="field.name + (field.is_required ? ' *' : '')"
@@ -57,6 +68,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: unknown): void
 }>()
+
+const selectOptions = computed(() =>
+  (props.field.options ?? []).map(o => ({ value: o, label: o }))
+)
 
 const booleanValue = computed(() =>
   props.modelValue === true || props.modelValue === 'true'

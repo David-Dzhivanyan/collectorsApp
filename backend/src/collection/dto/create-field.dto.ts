@@ -1,5 +1,4 @@
-// create-collection-type.dto.ts
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateFieldDto {
   @IsString()
@@ -12,4 +11,9 @@ export class CreateFieldDto {
   @IsString()
   @IsNotEmpty()
   field_type: 'string' | 'number' | 'date' | 'select' | 'boolean';
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  options?: string[];
 }

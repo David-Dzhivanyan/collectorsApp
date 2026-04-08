@@ -25,6 +25,9 @@ export class FieldsEntity {
   @JoinColumn({ name: 'created_by' })
   created_by: User;
 
+  @Column({ type: 'jsonb', nullable: true })
+  options?: string[];
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 }

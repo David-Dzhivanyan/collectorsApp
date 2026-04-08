@@ -22,6 +22,9 @@ export class CreateUserDto {
 }
 
 export class LoginDto {
+  @IsString()
   username: string;
+
+  @IsString()
   password: string;
 }

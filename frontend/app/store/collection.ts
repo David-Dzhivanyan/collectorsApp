@@ -15,6 +15,7 @@ export type CreateFieldRequest = {
   name: string
   description: string
   field_type: 'string' | 'number' | 'date' | 'select' | 'boolean'
+  options?: string[]
 }
 
 export type CollectionType = {
@@ -60,6 +61,7 @@ export type CollectionTableField = {
   name: string
   field_type: string
   is_required: boolean
+  options?: string[]
 }
 
 export type CollectionTableItem = {
@@ -80,6 +82,7 @@ export type CollectionTypeFieldInfo = {
   name: string
   field_type: string
   is_required: boolean
+  options?: string[]
 }
 
 export type CollectionTypeTableRow = {
@@ -190,6 +193,26 @@ export const useCollectionStore = defineStore('collection', () => {
     })
   }
 
+  const createCollectionTypeWithFields = async (
+    request: CreateCollectionTypeRequest,
+    fieldIds: number[],
+  ) => {
+    const { $axios } = useNuxtApp()
+
+    const { data } = await $axios.post<{ id: number }>('/collection', { ...request })
+    if (fieldIds.length) {
+      await Promise.all(
+        fieldIds.map(fieldId =>
+          $axios.post('/collection/field/create', {
+            collection_type_id: data.id,
+            field_id: fieldId,
+          }),
+        ),
+      )
+    }
+    return data
+  }
+
   const createUserCollection = async (request: {
     collection_type_id: number
   }) => {
@@ -234,6 +257,34 @@ export const useCollectionStore = defineStore('collection', () => {
     })
   }
 
+  const updateUserCollection = async (id: number, name: string) => {
+    const { $axios } = useNuxtApp()
+    await $axios.patch(`/collection/user-collection/${id}`, { name })
+  }
+
+  const deleteUserCollection = async (id: number) => {
+    const { $axios } = useNuxtApp()
+    await $axios.delete(`/collection/user-collection/${id}`)
+  }
+
+  const updateCollectionItem = async (
+    id: number,
+    payload: { name?: string; values?: { field_id: number; value: unknown }[] },
+  ) => {
+    const { $axios } = useNuxtApp()
+    await $axios.patch(`/collection/item/${id}`, payload)
+  }
+
+  const updateField = async (id: number, payload: { name?: string; description?: string }) => {
+    const { $axios } = useNuxtApp()
+    await $axios.patch(`/collection/field/${id}`, payload)
+  }
+
+  const deleteField = async (fieldId: number) => {
+    const { $axios } = useNuxtApp()
+    await $axios.delete(`/collection/field/${fieldId}`)
+  }
+
   const resetState = () => {
     collectionTypeList.value = null
     fieldsList.value = null
@@ -259,6 +310,7 @@ export const useCollectionStore = defineStore('collection', () => {
     getCollectionItems,
     createUserCollection,
     createCollectionType,
+    createCollectionTypeWithFields,
     createCurrentCollectionField,
     createField,
     createCollectionItem,
@@ -269,6 +321,11 @@ export const useCollectionStore = defineStore('collection', () => {
     getCollectionTypesTable,
     deleteCollectionType,
     deleteCollectionTypeField,
+    updateUserCollection,
+    deleteUserCollection,
+    updateCollectionItem,
+    updateField,
+    deleteField,
     resetState,
   }
 })

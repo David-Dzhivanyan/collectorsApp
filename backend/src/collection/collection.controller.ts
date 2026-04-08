@@ -6,6 +6,7 @@ import {
   HttpCode,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -21,6 +22,9 @@ import { CreateCollectionItemDto } from './dto/create-collection-item.dto';
 import { CreateItemValueDto } from './dto/create-item-value.dto';
 import { CollectionTableResponseDto } from './dto/collection-table.dto';
 import { CollectionTypeTableRow } from './dto/collection-types-table.dto';
+import { UpdateUserCollectionDto } from './dto/update-user-collection.dto';
+import { UpdateCollectionItemDto } from './dto/update-collection-item.dto';
+import { UpdateFieldDto } from './dto/update-field.dto';
 export interface RequestWithUser extends Request {
   user: User;
 }
@@ -121,12 +125,55 @@ export class CollectionController {
     await this.collectionService.deleteCollectionType(typeId);
   }
 
+  @Delete('field/:fieldId')
+  @HttpCode(204)
+  async deleteField(@Param('fieldId') fieldId: number): Promise<void> {
+    await this.collectionService.deleteField(fieldId);
+  }
+
   @Delete('type-field/:collectionTypeFieldId')
   @HttpCode(204)
   async deleteCollectionTypeField(
     @Param('collectionTypeFieldId') collectionTypeFieldId: number,
   ): Promise<void> {
     await this.collectionService.deleteCollectionTypeField(collectionTypeFieldId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('user-collection/:id')
+  @HttpCode(204)
+  async deleteUserCollection(@Param('id') id: number): Promise<void> {
+    await this.collectionService.deleteUserCollection(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('user-collection/:id')
+  @HttpCode(204)
+  async updateUserCollection(
+    @Param('id') id: number,
+    @Body() dto: UpdateUserCollectionDto,
+  ): Promise<void> {
+    await this.collectionService.updateUserCollection(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('item/:id')
+  @HttpCode(204)
+  async updateCollectionItem(
+    @Param('id') id: number,
+    @Body() dto: UpdateCollectionItemDto,
+  ): Promise<void> {
+    await this.collectionService.updateCollectionItem(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('field/:id')
+  @HttpCode(204)
+  async updateField(
+    @Param('id') id: number,
+    @Body() dto: UpdateFieldDto,
+  ): Promise<void> {
+    await this.collectionService.updateField(id, dto);
   }
 
   @Delete('item/:itemId')
