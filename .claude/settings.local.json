@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m 'feat: redesign home page with hero, features, and how-it-works sections:*)",
+      "Bash(git commit -m 'feat: add delete collection item \\(trash icon in table + backend DELETE endpoint\\):*)"
+    ]
+  }
+}

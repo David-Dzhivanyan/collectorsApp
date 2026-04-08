@@ -132,6 +132,12 @@ export const useCollectionStore = defineStore('collection', () => {
     return data
   }
 
+  const deleteCollectionItem = async (itemId: number) => {
+    const { $axios } = useNuxtApp()
+
+    await $axios.delete(`/collection/item/${itemId}`)
+  }
+
   const createCurrentCollectionField = async (request: CreateCollectionFieldRequest) => {
     const { $axios } = useNuxtApp()
 
@@ -213,5 +219,6 @@ export const useCollectionStore = defineStore('collection', () => {
     createItemValue,
     getItemValues,
     getCollectionTable,
+    deleteCollectionItem,
   }
 })

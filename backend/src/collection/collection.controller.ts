@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   NotFoundException,
   Param,
   Post,
@@ -105,6 +107,12 @@ export class CollectionController {
   @Get('item-values/:collectionItemId')
   async findItemValues(@Param('collectionItemId') collectionItemId: number) {
     return this.collectionService.findItemValues(collectionItemId);
+  }
+
+  @Delete('item/:itemId')
+  @HttpCode(204)
+  async deleteCollectionItem(@Param('itemId') itemId: number): Promise<void> {
+    await this.collectionService.deleteCollectionItem(itemId);
   }
 
   @Get('user-collection/:userCollectionId/table')

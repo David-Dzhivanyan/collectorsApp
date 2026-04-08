@@ -232,4 +232,9 @@ export class CollectionService {
 
     return { fields, items: shapedItems };
   }
+
+  async deleteCollectionItem(itemId: number): Promise<void> {
+    await this.collectionItemValuesRepo.delete({ collection_item_id: { id: itemId } });
+    await this.collectionItemsRepo.delete(itemId);
+  }
 }

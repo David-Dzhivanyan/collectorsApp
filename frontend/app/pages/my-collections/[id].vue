@@ -47,6 +47,7 @@
               <th v-for="field in tableData.fields" :key="field.id">
                 {{ field.name }}
               </th>
+              <th class="col-action" />
             </tr>
           </thead>
           <tbody>
@@ -54,6 +55,11 @@
               <td>{{ item.name }}</td>
               <td v-for="field in tableData.fields" :key="field.id">
                 {{ item.values[String(field.id)] ?? '—' }}
+              </td>
+              <td class="col-action">
+                <button class="delete-btn" title="Удалить" @click="handleDeleteItem(item.id)">
+                  <icons-trash class="delete-btn__icon" />
+                </button>
               </td>
             </tr>
           </tbody>
@@ -84,6 +90,11 @@ const { userCollections, currentUserCollection } = storeToRefs(collectionStore)
 
 const loadTable = async () => {
   tableData.value = await collectionStore.getCollectionTable(id)
+}
+
+const handleDeleteItem = async (itemId: number) => {
+  await collectionStore.deleteCollectionItem(itemId)
+  await loadTable()
 }
 
 const handleCreate = async () => {
@@ -221,6 +232,34 @@ onMounted(async () => {
 
   tbody tr:hover td {
     background: $gray200;
+  }
+}
+
+.col-action {
+  width: 48px;
+  text-align: center;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: $gray600;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $red400;
+    background: rgba(220, 53, 69, 0.08);
+  }
+
+  &__icon {
+    width: 16px;
+    height: 16px;
   }
 }
 </style>
