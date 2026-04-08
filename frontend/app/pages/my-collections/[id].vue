@@ -15,12 +15,15 @@
 
     <div v-if="isFormOpen && tableData" class="form">
       <div class="form__fields">
-        <ui-text-field v-model="form.name" label="Название" />
-        <ui-text-field
+        <ui-text-field v-model="form.name" label="Название *" />
+        <ui-field-input
           v-for="field in tableData.fields"
           :key="field.id"
-          v-model="fieldValues[field.id]"
-          :label="field.name"
+          :field="field"
+          :model-value="fieldValues[field.id]"
+          :is-error="!!fieldErrors[field.id]"
+          :error-message="fieldErrors[field.id]"
+          @update:model-value="fieldValues[field.id] = $event"
         />
       </div>
       <div class="form__footer">
@@ -54,7 +57,15 @@
             <tr v-for="item in tableData.items" :key="item.id">
               <td>{{ item.name }}</td>
               <td v-for="field in tableData.fields" :key="field.id">
-                {{ item.values[String(field.id)] ?? '—' }}
+                <template v-if="field.field_type === 'boolean'">
+                  {{ item.values[String(field.id)] === true ? '✓' : item.values[String(field.id)] === false ? '✗' : '—' }}
+                </template>
+                <template v-else-if="field.field_type === 'date' && item.values[String(field.id)]">
+                  {{ new Date(item.values[String(field.id)] as string).toLocaleDateString('ru-RU') }}
+                </template>
+                <template v-else>
+                  {{ item.values[String(field.id)] ?? '—' }}
+                </template>
               </td>
               <td class="col-action">
                 <button class="delete-btn" title="Удалить" @click="handleDeleteItem(item.id)">
@@ -84,12 +95,42 @@ const collectionName = ref('')
 const collectionTypeName = ref('')
 
 const form = ref({ name: '' })
-const fieldValues = ref<Record<number, string>>({})
+const fieldValues = ref<Record<number, unknown>>({})
+const fieldErrors = ref<Record<number, string>>({})
 
 const { userCollections, currentUserCollection } = storeToRefs(collectionStore)
 
 const loadTable = async () => {
   tableData.value = await collectionStore.getCollectionTable(id)
+}
+
+const validateFields = (): boolean => {
+  fieldErrors.value = {}
+  let valid = true
+
+  for (const field of tableData.value?.fields ?? []) {
+    const val = fieldValues.value[field.id]
+    const isEmpty = val === undefined || val === null || val === ''
+
+    if (field.is_required && isEmpty) {
+      fieldErrors.value[field.id] = 'Обязательное поле'
+      valid = false
+      continue
+    }
+
+    if (isEmpty) continue
+
+    if (field.field_type === 'number' && isNaN(Number(val))) {
+      fieldErrors.value[field.id] = 'Введите корректное число'
+      valid = false
+    }
+    if (field.field_type === 'date' && isNaN(new Date(val as string).getTime())) {
+      fieldErrors.value[field.id] = 'Введите корректную дату'
+      valid = false
+    }
+  }
+
+  return valid
 }
 
 const handleDeleteItem = async (itemId: number) => {
@@ -98,18 +139,20 @@ const handleDeleteItem = async (itemId: number) => {
 }
 
 const handleCreate = async () => {
+  if (!validateFields()) return
+
   const item = await collectionStore.createCollectionItem({ name: form.value.name, user_collection_id: id })
-  console.log(collectionStore.currentUserCollection)
   if (item) {
     for (const field of tableData.value?.fields ?? []) {
       const value = fieldValues.value[field.id]
-      if (value) {
+      if (value !== undefined && value !== null && value !== '') {
         await collectionStore.createItemValue({ collection_item_id: item.id, field_id: field.id, value })
       }
     }
   }
   form.value.name = ''
   fieldValues.value = {}
+  fieldErrors.value = {}
   isFormOpen.value = false
   await loadTable()
 }
@@ -185,7 +228,7 @@ onMounted(async () => {
   &__fields {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
   &__footer {

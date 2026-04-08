@@ -226,7 +226,7 @@ export const useCollectionStore = defineStore('collection', () => {
     }
   }
 
-  const createItemValue = async (request: { collection_item_id: number, field_id: number, value: string }) => {
+  const createItemValue = async (request: { collection_item_id: number, field_id: number, value: unknown }) => {
     const { $axios } = useNuxtApp()
 
     await $axios.post('/collection/item-value/create', {

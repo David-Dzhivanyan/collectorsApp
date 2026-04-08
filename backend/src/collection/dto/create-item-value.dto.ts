@@ -1,16 +1,14 @@
-// create-collection-type.dto.ts
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsPositive } from 'class-validator';
 
 export class CreateItemValueDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
   collection_item_id: number;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
   field_id: number;
 
-  @IsString()
   @IsNotEmpty()
-  value: string;
+  value: unknown;
 }

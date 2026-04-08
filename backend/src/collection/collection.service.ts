@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CollectionTypesEntity } from './entities/collectionTypes.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -152,13 +152,70 @@ export class CollectionService {
   async createItemValue(
     dto: CreateItemValueDto,
   ): Promise<CollectionItemValuesEntity> {
-    const newField = this.collectionItemValuesRepo.create({
+    const field = await this.fieldsRepo.findOne({ where: { id: dto.field_id } });
+    if (!field) {
+      throw new BadRequestException(`Поле ${dto.field_id} не найдено`);
+    }
+
+    const normalized = this.validateAndNormalize(field.field_type, dto.value);
+
+    const entity = this.collectionItemValuesRepo.create({
       collection_item_id: { id: dto.collection_item_id },
       field_id: { id: dto.field_id },
-      value: dto.value,
+      value: normalized,
     });
 
-    return this.collectionItemValuesRepo.save(newField);
+    return this.collectionItemValuesRepo.save(entity);
+  }
+
+  private validateAndNormalize(
+    fieldType: FieldsEntity['field_type'],
+    raw: unknown,
+  ): unknown {
+    switch (fieldType) {
+      case 'string':
+      case 'select': {
+        if (typeof raw !== 'string' || raw.trim() === '') {
+          throw new BadRequestException(
+            `Поле типа "${fieldType}" должно быть непустой строкой`,
+          );
+        }
+        return raw.trim();
+      }
+
+      case 'number': {
+        const num = Number(raw);
+        if (raw === '' || raw === null || raw === undefined || isNaN(num)) {
+          throw new BadRequestException(
+            `Поле типа "number" должно быть числом`,
+          );
+        }
+        return num;
+      }
+
+      case 'date': {
+        const d = new Date(raw as string);
+        if (isNaN(d.getTime())) {
+          throw new BadRequestException(
+            `Поле типа "date" должно быть корректной датой`,
+          );
+        }
+        return d.toISOString();
+      }
+
+      case 'boolean': {
+        if (raw === true || raw === 1 || raw === 'true' || raw === '1') return true;
+        if (raw === false || raw === 0 || raw === 'false' || raw === '0') return false;
+        throw new BadRequestException(
+          `Поле типа "boolean" должно быть true или false`,
+        );
+      }
+
+      default:
+        throw new BadRequestException(
+          `Неизвестный тип поля: ${String(fieldType)}`,
+        );
+    }
   }
 
   async findItemValues(

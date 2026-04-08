@@ -47,7 +47,7 @@ const model = defineModel<string | number>()
   &__input {
     border: 1.5px solid $gray300;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 4px 8px;
     font-size: 14px;
     color: $gray900;
     background: $white;

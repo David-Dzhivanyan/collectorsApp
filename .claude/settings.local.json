@@ -8,7 +8,11 @@
       "Bash(git commit -m 'feat: redesign select-field to match text-field style \\(border, label, custom arrow\\):*)",
       "Bash(git commit -m 'feat: redesign modals — cleaner base, backdrop blur, consistent form layout:*)",
       "Bash(git commit -m 'feat: hide auth-only UI for unauthenticated users, reset collection store on logout:*)",
-      "Bash(git commit -m 'feat: collection-type table with fields, delete type/field, add field inline \\(req 7+8\\):*)"
+      "Bash(git commit -m 'feat: collection-type table with fields, delete type/field, add field inline \\(req 7+8\\):*)",
+      "Bash(git commit -m 'fix: cascade delete user collections and items when deleting a collection type:*)",
+      "Bash(git commit -m 'feat: replace native select with custom dropdown matching text-field style:*)",
+      "Bash(npm install:*)",
+      "Bash(git commit -m 'feat: field type validation — backend ValidationPipe + type-aware normalize, frontend smart field inputs:*)"
     ]
   }
 }

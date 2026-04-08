@@ -34,5 +34,5 @@ export class CollectionItemValuesEntity {
   // value_date?: Date;
 
   @Column({ type: 'jsonb', nullable: true })
-  value?: string;
+  value?: unknown;
 }
