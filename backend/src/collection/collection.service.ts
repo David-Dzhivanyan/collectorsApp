@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CollectionTypesEntity } from './entities/collectionTypes.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateCollectionTypeDto } from './dto/create-collection-type.dto';
 import { User } from '../users/entities/user.entity';
 import { FieldsEntity } from './entities/fields.entity';
@@ -14,6 +14,7 @@ import { CreateCollectionItemDto } from './dto/create-collection-item.dto';
 import { CollectionItemsEntity } from './entities/collectionItems.entity';
 import { CreateItemValueDto } from './dto/create-item-value.dto';
 import { CollectionItemValuesEntity } from './entities/collectionItemValues.entity';
+import { CollectionTableResponseDto } from './dto/collection-table.dto';
 
 @Injectable()
 export class CollectionService {
@@ -173,5 +174,62 @@ export class CollectionService {
         collection_item_id: true,
       },
     });
+  }
+
+  async getCollectionTable(
+    userCollectionId: number,
+  ): Promise<CollectionTableResponseDto | null> {
+    const userCollection = await this.userCollectionsRepo.findOne({
+      where: { id: userCollectionId },
+      relations: { collection_type_id: true },
+    });
+
+    if (!userCollection) return null;
+
+    const collectionTypeId = userCollection.collection_type_id.id;
+
+    const [typeFields, items] = await Promise.all([
+      this.collectionTypeFieldsRepo.find({
+        where: { collection_type_id: { id: collectionTypeId } },
+        relations: { field_id: true },
+      }),
+      this.collectionItemsRepo.find({
+        where: { user_collection_id: { id: userCollectionId } },
+      }),
+    ]);
+
+    const itemIds = items.map((item) => item.id);
+    const allValues = itemIds.length
+      ? await this.collectionItemValuesRepo.find({
+          where: { collection_item_id: { id: In(itemIds) } },
+          relations: { field_id: true, collection_item_id: true },
+        })
+      : [];
+
+    const fields = typeFields.map((ctf) => ({
+      id: ctf.field_id.id,
+      name: ctf.field_id.name,
+      field_type: ctf.field_id.field_type,
+      is_required: ctf.is_required,
+    }));
+
+    const valuesByItemId = new Map<number, Record<string, any>>(
+      items.map((item) => [item.id, {}]),
+    );
+    for (const val of allValues) {
+      const bucket = valuesByItemId.get(val.collection_item_id.id);
+      if (bucket !== undefined) {
+        bucket[String(val.field_id.id)] = val.value;
+      }
+    }
+
+    const shapedItems = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      created_at: item.created_at,
+      values: valuesByItemId.get(item.id) ?? {},
+    }));
+
+    return { fields, items: shapedItems };
   }
 }

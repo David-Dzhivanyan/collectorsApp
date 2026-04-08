@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Post,
   Req,
@@ -16,6 +17,7 @@ import { CreateCollectionTypeFieldDto } from './dto/create-collection-type-field
 import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 import { CreateCollectionItemDto } from './dto/create-collection-item.dto';
 import { CreateItemValueDto } from './dto/create-item-value.dto';
+import { CollectionTableResponseDto } from './dto/collection-table.dto';
 export interface RequestWithUser extends Request {
   user: User;
 }
@@ -103,5 +105,19 @@ export class CollectionController {
   @Get('item-values/:collectionItemId')
   async findItemValues(@Param('collectionItemId') collectionItemId: number) {
     return this.collectionService.findItemValues(collectionItemId);
+  }
+
+  @Get('user-collection/:userCollectionId/table')
+  async getCollectionTable(
+    @Param('userCollectionId') userCollectionId: number,
+  ): Promise<CollectionTableResponseDto> {
+    const result =
+      await this.collectionService.getCollectionTable(userCollectionId);
+    if (!result) {
+      throw new NotFoundException(
+        `User collection ${userCollectionId} not found`,
+      );
+    }
+    return result;
   }
 }

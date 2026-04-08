@@ -55,6 +55,25 @@ export type CollectionItem = {
   }
 }
 
+export type CollectionTableField = {
+  id: number
+  name: string
+  field_type: string
+  is_required: boolean
+}
+
+export type CollectionTableItem = {
+  id: number
+  name: string
+  created_at: string
+  values: Record<string, any>
+}
+
+export type CollectionTableResponse = {
+  fields: CollectionTableField[]
+  items: CollectionTableItem[]
+}
+
 export const useCollectionStore = defineStore('collection', () => {
   const collectionTypeList = ref<CollectionType[] | null>(null)
   const fieldsList = ref<Field[] | null>(null)
@@ -103,6 +122,13 @@ export const useCollectionStore = defineStore('collection', () => {
     const { $axios } = useNuxtApp()
 
     const { data } = await $axios.get<unknown[]>(`/collection/item-values/${collectionItemId}`)
+    return data
+  }
+
+  const getCollectionTable = async (userCollectionId: number) => {
+    const { $axios } = useNuxtApp()
+
+    const { data } = await $axios.get<CollectionTableResponse>(`/collection/user-collection/${userCollectionId}/table`)
     return data
   }
 
@@ -186,5 +212,6 @@ export const useCollectionStore = defineStore('collection', () => {
     createCollectionItem,
     createItemValue,
     getItemValues,
+    getCollectionTable,
   }
 })

@@ -1,21 +1,29 @@
 <template>
-  <div class="field">
-    <div class="field-header">
-      Поля
+  <ui-page-section>
+    <template #title>Поля коллекций</template>
+    <template #action>
+      <ui-btn @click="handleCreateField">Создать</ui-btn>
+    </template>
 
-      <ui-btn @click="handleCreateField">
-        Создать
-      </ui-btn>
+    <div v-if="!fieldsList || fieldsList.length === 0" class="empty">
+      Нет полей
     </div>
 
-    <div class="field-list">
-      <div v-for="field in fieldsList" :key="field.id" class="field-item" @click="handleClick(field)">
-        <span><b>Название:</b> {{ field.name }}</span>
-        <span><b>Описание:</b> {{ field.description }}</span>
-        <span><b>Тип поля:</b> {{ field.field_type }}</span>
+    <div v-else class="list">
+      <div
+        v-for="field in fieldsList"
+        :key="field.id"
+        class="card"
+        @click="handleClick(field)"
+      >
+        <div class="card__main">
+          <span class="card__name">{{ field.name }}</span>
+          <span v-if="field.description" class="card__description">{{ field.description }}</span>
+        </div>
+        <span class="card__badge">{{ field.field_type }}</span>
       </div>
     </div>
-  </div>
+  </ui-page-section>
 </template>
 
 <script setup lang="ts">
@@ -44,45 +52,59 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.field {
-  box-shadow: $box-shadow-default;
-  padding: 16px 20px;
-  border-radius: 8px;
-  margin-top: 16px;
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.field-header {
+.card {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.field-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.field-item {
-  position: relative;
-  display: flex;
+  padding: 14px 20px;
+  border: 1px solid $gray300;
+  border-radius: 10px;
   cursor: pointer;
-  flex-direction: column;
-  border-radius: 8px;
-  padding: 8px 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
   &:hover {
-    box-shadow: $box-shadow-default;
+    border-color: $primary;
+    box-shadow: 0 2px 12px rgba(132, 88, 255, 0.12);
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 3%;
-    width: 94%;
-    height: 1px;
-    background: $black;
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
+
+  &__name {
+    font-weight: 600;
+    color: $gray900;
+  }
+
+  &__description {
+    font-size: 13px;
+    color: $gray600;
+  }
+
+  &__badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: $primary;
+    background: rgba(132, 88, 255, 0.08);
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    margin-left: 16px;
+  }
+}
+
+.empty {
+  color: $gray600;
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
 }
 </style>

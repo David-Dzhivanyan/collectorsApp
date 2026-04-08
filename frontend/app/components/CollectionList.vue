@@ -1,21 +1,29 @@
 <template>
-  <div class="collection">
-    <div class="collection-header">
-      Типы коллекций
+  <ui-page-section>
+    <template #title>Типы коллекций</template>
+    <template #action>
+      <ui-btn @click="handleCreateType">Создать</ui-btn>
+    </template>
 
-      <ui-btn @click="handleCreateType">
-        Создать
-      </ui-btn>
+    <div v-if="!collectionTypeList || collectionTypeList.length === 0" class="empty">
+      Нет типов коллекций
     </div>
 
-    <div class="collection-list">
-      <div v-for="type in collectionTypeList" :key="type.id" class="collection-item" @click="onClickCollectionType(type)">
-        <span><b>Имя:</b> {{ type.name }}</span>
-        <span><b>Описание:</b> {{ type.description }}</span>
-        <span><b>Автор:</b> {{ type.created_by.firstName }} {{ type.created_by.lastName }}</span>
+    <div v-else class="list">
+      <div
+        v-for="type in collectionTypeList"
+        :key="type.id"
+        class="card"
+        @click="onClickCollectionType(type)"
+      >
+        <div class="card__main">
+          <span class="card__name">{{ type.name }}</span>
+          <span v-if="type.description" class="card__description">{{ type.description }}</span>
+        </div>
+        <span class="card__author">{{ type.created_by.firstName }} {{ type.created_by.lastName }}</span>
       </div>
     </div>
-  </div>
+  </ui-page-section>
 </template>
 
 <script setup lang="ts">
@@ -42,45 +50,55 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.collection {
-  box-shadow: $box-shadow-default;
-  padding: 16px 20px;
-  border-radius: 8px;
-  margin-top: 16px;
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.collection-header {
+.card {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.collection-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.collection-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  padding: 14px 20px;
+  border: 1px solid $gray300;
+  border-radius: 10px;
   cursor: pointer;
-  border-radius: 8px;
-  padding: 8px 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
   &:hover {
-    box-shadow: $box-shadow-default;
+    border-color: $primary;
+    box-shadow: 0 2px 12px rgba(132, 88, 255, 0.12);
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 3%;
-    width: 94%;
-    height: 1px;
-    background: $black;
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
+
+  &__name {
+    font-weight: 600;
+    color: $gray900;
+  }
+
+  &__description {
+    font-size: 13px;
+    color: $gray600;
+  }
+
+  &__author {
+    font-size: 13px;
+    color: $gray600;
+    white-space: nowrap;
+    margin-left: 16px;
+  }
+}
+
+.empty {
+  color: $gray600;
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
 }
 </style>

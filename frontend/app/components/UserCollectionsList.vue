@@ -1,19 +1,26 @@
 <template>
-  <div class="user-collections">
-    <div class="header">
-      Мои коллекции
+  <ui-page-section>
+    <template #title>Мои коллекции</template>
+    <template #action>
+      <ui-btn @click="handleCreateUserCollection">Создать</ui-btn>
+    </template>
 
-      <ui-btn @click="handleCreateUserCollection">
-        Создать
-      </ui-btn>
+    <div v-if="!userCollections || userCollections.length === 0" class="empty">
+      У вас пока нет коллекций
     </div>
-    <div class="list">
-      <div v-for="collection in userCollections" :key="collection.id" class="collection-item" @click="handleClick(collection)">
-        <span><b>Имя:</b> {{ collection.name }}</span>
-        <span><b>Тип коллекции:</b> {{ collection.collection_type_id.name }}</span>
+
+    <div v-else class="list">
+      <div
+        v-for="collection in userCollections"
+        :key="collection.id"
+        class="card"
+        @click="handleClick(collection)"
+      >
+        <span class="card__name">{{ collection.name }}</span>
+        <span class="card__meta">{{ collection.collection_type_id.name }}</span>
       </div>
     </div>
-  </div>
+  </ui-page-section>
 </template>
 
 <script setup lang="ts">
@@ -22,8 +29,9 @@ import { useCollectionStore } from '@/store/collection'
 import { useModalStore } from '@/store/modal'
 import { useUserStore } from '@/store/user'
 
+const router = useRouter()
 const { getUserCollections } = useCollectionStore()
-const { userCollections, currentUserCollection } = storeToRefs(useCollectionStore())
+const { userCollections } = storeToRefs(useCollectionStore())
 const { currentUser } = storeToRefs(useUserStore())
 const { open } = useModalStore()
 
@@ -32,8 +40,7 @@ const handleCreateUserCollection = () => {
 }
 
 const handleClick = (collection: UserCollection) => {
-  currentUserCollection.value = collection
-  open('collectionItems')
+  router.push(`/my-collections/${collection.id}`)
 }
 
 onMounted(async () => {
@@ -44,51 +51,48 @@ onMounted(async () => {
 
 watch(currentUser, async () => {
   if (currentUser.value) {
-    await getUserCollections(currentUser.value?.id)
+    await getUserCollections(currentUser.value.id)
   }
 })
 </script>
 
 <style scoped lang="scss">
-.user-collections {
-  box-shadow: $box-shadow-default;
-  padding: 16px 20px;
-  border-radius: 8px;
-  margin-top: 16px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
 .list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-.collection-item {
-  position: relative;
+.card {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border: 1px solid $gray300;
+  border-radius: 10px;
   cursor: pointer;
-  flex-direction: column;
-  border-radius: 8px;
-  padding: 8px 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
   &:hover {
-    box-shadow: $box-shadow-default;
+    border-color: $primary;
+    box-shadow: 0 2px 12px rgba(132, 88, 255, 0.12);
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 3%;
-    width: 94%;
-    height: 1px;
-    background: $black;
+  &__name {
+    font-weight: 600;
+    color: $gray900;
   }
+
+  &__meta {
+    font-size: 13px;
+    color: $gray600;
+  }
+}
+
+.empty {
+  color: $gray600;
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
 }
 </style>
