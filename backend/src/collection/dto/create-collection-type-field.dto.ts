@@ -1,16 +1,15 @@
-// create-collection-type.dto.ts
-import { IsString, IsNotEmpty, IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsPositive } from 'class-validator';
 
 export class CreateCollectionTypeFieldDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
   collection_type_id: number;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
   field_id: number;
 
   @IsOptional()
   @IsBoolean()
-  is_required: boolean;
+  is_required?: boolean;
 }
