@@ -20,6 +20,7 @@ import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 import { CreateCollectionItemDto } from './dto/create-collection-item.dto';
 import { CreateItemValueDto } from './dto/create-item-value.dto';
 import { CollectionTableResponseDto } from './dto/collection-table.dto';
+import { CollectionTypeTableRow } from './dto/collection-types-table.dto';
 export interface RequestWithUser extends Request {
   user: User;
 }
@@ -107,6 +108,25 @@ export class CollectionController {
   @Get('item-values/:collectionItemId')
   async findItemValues(@Param('collectionItemId') collectionItemId: number) {
     return this.collectionService.findItemValues(collectionItemId);
+  }
+
+  @Get('types/table')
+  async getCollectionTypesTable(): Promise<CollectionTypeTableRow[]> {
+    return this.collectionService.getCollectionTypesTable();
+  }
+
+  @Delete('type/:typeId')
+  @HttpCode(204)
+  async deleteCollectionType(@Param('typeId') typeId: number): Promise<void> {
+    await this.collectionService.deleteCollectionType(typeId);
+  }
+
+  @Delete('type-field/:collectionTypeFieldId')
+  @HttpCode(204)
+  async deleteCollectionTypeField(
+    @Param('collectionTypeFieldId') collectionTypeFieldId: number,
+  ): Promise<void> {
+    await this.collectionService.deleteCollectionTypeField(collectionTypeFieldId);
   }
 
   @Delete('item/:itemId')

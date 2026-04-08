@@ -15,6 +15,7 @@ import { CollectionItemsEntity } from './entities/collectionItems.entity';
 import { CreateItemValueDto } from './dto/create-item-value.dto';
 import { CollectionItemValuesEntity } from './entities/collectionItemValues.entity';
 import { CollectionTableResponseDto } from './dto/collection-table.dto';
+import { CollectionTypeTableRow } from './dto/collection-types-table.dto';
 
 @Injectable()
 export class CollectionService {
@@ -236,5 +237,38 @@ export class CollectionService {
   async deleteCollectionItem(itemId: number): Promise<void> {
     await this.collectionItemValuesRepo.delete({ collection_item_id: { id: itemId } });
     await this.collectionItemsRepo.delete(itemId);
+  }
+
+  async getCollectionTypesTable(): Promise<CollectionTypeTableRow[]> {
+    const [types, allTypeFields] = await Promise.all([
+      this.collectionTypesRepo.find({ relations: { created_by: true } }),
+      this.collectionTypeFieldsRepo.find({ relations: { collection_type_id: true, field_id: true } }),
+    ]);
+
+    return types.map((type) => ({
+      id: type.id,
+      name: type.name,
+      description: type.description,
+      created_by: `${type.created_by.firstName} ${type.created_by.lastName}`.trim(),
+      created_at: type.created_at,
+      fields: allTypeFields
+        .filter((ctf) => ctf.collection_type_id.id === type.id)
+        .map((ctf) => ({
+          id: ctf.id,
+          fieldId: ctf.field_id.id,
+          name: ctf.field_id.name,
+          field_type: ctf.field_id.field_type,
+          is_required: ctf.is_required,
+        })),
+    }));
+  }
+
+  async deleteCollectionType(typeId: number): Promise<void> {
+    await this.collectionTypeFieldsRepo.delete({ collection_type_id: { id: typeId } });
+    await this.collectionTypesRepo.delete(typeId);
+  }
+
+  async deleteCollectionTypeField(collectionTypeFieldId: number): Promise<void> {
+    await this.collectionTypeFieldsRepo.delete(collectionTypeFieldId);
   }
 }

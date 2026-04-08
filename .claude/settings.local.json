@@ -7,7 +7,8 @@
       "Bash(git commit -m 'feat: redesign text-field — compact layout, uppercase label, stronger border contrast:*)",
       "Bash(git commit -m 'feat: redesign select-field to match text-field style \\(border, label, custom arrow\\):*)",
       "Bash(git commit -m 'feat: redesign modals — cleaner base, backdrop blur, consistent form layout:*)",
-      "Bash(git commit -m 'feat: hide auth-only UI for unauthenticated users, reset collection store on logout:*)"
+      "Bash(git commit -m 'feat: hide auth-only UI for unauthenticated users, reset collection store on logout:*)",
+      "Bash(git commit -m 'feat: collection-type table with fields, delete type/field, add field inline \\(req 7+8\\):*)"
     ]
   }
 }

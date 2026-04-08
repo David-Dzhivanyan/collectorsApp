@@ -74,6 +74,23 @@ export type CollectionTableResponse = {
   items: CollectionTableItem[]
 }
 
+export type CollectionTypeFieldInfo = {
+  id: number
+  fieldId: number
+  name: string
+  field_type: string
+  is_required: boolean
+}
+
+export type CollectionTypeTableRow = {
+  id: number
+  name: string
+  description: string
+  created_by: string
+  created_at: string
+  fields: CollectionTypeFieldInfo[]
+}
+
 export const useCollectionStore = defineStore('collection', () => {
   const collectionTypeList = ref<CollectionType[] | null>(null)
   const fieldsList = ref<Field[] | null>(null)
@@ -136,6 +153,25 @@ export const useCollectionStore = defineStore('collection', () => {
     const { $axios } = useNuxtApp()
 
     await $axios.delete(`/collection/item/${itemId}`)
+  }
+
+  const getCollectionTypesTable = async () => {
+    const { $axios } = useNuxtApp()
+
+    const { data } = await $axios.get<CollectionTypeTableRow[]>('/collection/types/table')
+    return data
+  }
+
+  const deleteCollectionType = async (typeId: number) => {
+    const { $axios } = useNuxtApp()
+
+    await $axios.delete(`/collection/type/${typeId}`)
+  }
+
+  const deleteCollectionTypeField = async (collectionTypeFieldId: number) => {
+    const { $axios } = useNuxtApp()
+
+    await $axios.delete(`/collection/type-field/${collectionTypeFieldId}`)
   }
 
   const createCurrentCollectionField = async (request: CreateCollectionFieldRequest) => {
@@ -230,6 +266,9 @@ export const useCollectionStore = defineStore('collection', () => {
     getItemValues,
     getCollectionTable,
     deleteCollectionItem,
+    getCollectionTypesTable,
+    deleteCollectionType,
+    deleteCollectionTypeField,
     resetState,
   }
 })
