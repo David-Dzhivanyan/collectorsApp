@@ -4,6 +4,7 @@ import type { ApiError, LoginData, RegData } from '@/types'
 import { notify } from '@kyvg/vue3-notification'
 import { useModalStore } from '@/store/modal'
 import { useUserStore } from '@/store/user'
+import { useCollectionStore } from '@/store/collection'
 
 export const useAuthStore = defineStore('auth', () => {
     const isAuth = ref<boolean>(false)
@@ -28,6 +29,9 @@ export const useAuthStore = defineStore('auth', () => {
         await $axios.post('/logout')
         isAuth.value = false
         currentUser.value = null
+
+        useCollectionStore().resetState()
+
         notify({
             title: 'Вы вышли!',
             type: 'success',

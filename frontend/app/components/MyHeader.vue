@@ -7,19 +7,13 @@
       </nuxt-link>
 
       <div class="links">
-        <nuxt-link to="/my-collections" class="link-item">
-          Мои коллекции
-        </nuxt-link>
-        <nuxt-link to="/collection-type" class="link-item">
-          Типы коллекций
-        </nuxt-link>
-        <nuxt-link to="/field-list" class="link-item">
-          Поля коллекций
-        </nuxt-link>
+        <nuxt-link v-if="isAuth" to="/my-collections" class="link-item">Мои коллекции</nuxt-link>
+        <nuxt-link to="/collection-type" class="link-item">Типы коллекций</nuxt-link>
+        <nuxt-link to="/field-list" class="link-item">Поля коллекций</nuxt-link>
       </div>
 
       <div class="navs">
-        <nuxt-link to="/profile" class="profile-link">
+        <nuxt-link v-if="isAuth" to="/profile" class="profile-link">
           <div class="profile-icon">
             <icons-profile class="profile" />
           </div>

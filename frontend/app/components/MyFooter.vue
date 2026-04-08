@@ -33,7 +33,7 @@
             Меню
 
             <div class="links">
-              <nuxt-link to="/my-collections" class="link-item">
+              <nuxt-link v-if="isAuth" to="/my-collections" class="link-item">
                 Мои коллекции
               </nuxt-link>
               <nuxt-link to="/collection-type" class="link-item">
@@ -51,6 +51,9 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from '@/store/auth'
+
+const { isAuth } = storeToRefs(useAuthStore())
 const name = ref('')
 const tel = ref('')
 </script>

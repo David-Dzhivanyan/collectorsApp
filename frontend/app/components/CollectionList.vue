@@ -2,7 +2,7 @@
   <ui-page-section>
     <template #title>Типы коллекций</template>
     <template #action>
-      <ui-btn @click="handleCreateType">Создать</ui-btn>
+      <ui-btn v-if="isAuth" @click="handleCreateType">Создать</ui-btn>
     </template>
 
     <div v-if="!collectionTypeList || collectionTypeList.length === 0" class="empty">
@@ -30,10 +30,12 @@
 import type { CollectionType } from '@/store/collection'
 import { useCollectionStore } from '@/store/collection'
 import { useModalStore } from '@/store/modal'
+import { useAuthStore } from '@/store/auth'
 
 const { getCollectionTypes } = useCollectionStore()
 const { collectionTypeList, currentCollection } = storeToRefs(useCollectionStore())
 const { open } = useModalStore()
+const { isAuth } = storeToRefs(useAuthStore())
 
 const handleCreateType = () => {
   open('createType')

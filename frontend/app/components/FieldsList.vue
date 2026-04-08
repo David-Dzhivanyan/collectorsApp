@@ -2,7 +2,7 @@
   <ui-page-section>
     <template #title>Поля коллекций</template>
     <template #action>
-      <ui-btn @click="handleCreateField">Создать</ui-btn>
+      <ui-btn v-if="isAuth" @click="handleCreateField">Создать</ui-btn>
     </template>
 
     <div v-if="!fieldsList || fieldsList.length === 0" class="empty">
@@ -30,10 +30,12 @@
 import type { Field } from '@/store/collection'
 import { useCollectionStore } from '@/store/collection'
 import { useModalStore } from '@/store/modal'
+import { useAuthStore } from '@/store/auth'
 
 const { getFields, createCurrentCollectionField, getCurrentCollectionTypeField } = useCollectionStore()
 const { fieldsList, currentCollection } = storeToRefs(useCollectionStore())
 const { open } = useModalStore()
+const { isAuth } = storeToRefs(useAuthStore())
 
 const handleCreateField = () => {
   open('createField')

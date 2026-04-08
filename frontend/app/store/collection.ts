@@ -198,6 +198,16 @@ export const useCollectionStore = defineStore('collection', () => {
     })
   }
 
+  const resetState = () => {
+    collectionTypeList.value = null
+    fieldsList.value = null
+    currentCollection.value = null
+    currentCollectionFields.value = null
+    userCollections.value = null
+    currentUserCollection.value = null
+    currentCollectionItems.value = null
+  }
+
   return {
     collectionTypeList,
     fieldsList,
@@ -220,5 +230,6 @@ export const useCollectionStore = defineStore('collection', () => {
     getItemValues,
     getCollectionTable,
     deleteCollectionItem,
+    resetState,
   }
 })
