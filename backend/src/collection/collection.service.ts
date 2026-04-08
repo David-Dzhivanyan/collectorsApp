@@ -264,6 +264,30 @@ export class CollectionService {
   }
 
   async deleteCollectionType(typeId: number): Promise<void> {
+    // Find all user collections of this type
+    const userCollections = await this.userCollectionsRepo.find({
+      where: { collection_type_id: { id: typeId } },
+    });
+
+    // For each user collection delete items and their values
+    for (const uc of userCollections) {
+      const items = await this.collectionItemsRepo.find({
+        where: { user_collection_id: { id: uc.id } },
+      });
+      for (const item of items) {
+        await this.collectionItemValuesRepo.delete({ collection_item_id: { id: item.id } });
+      }
+      if (items.length) {
+        await this.collectionItemsRepo.delete(
+          items.map((i) => i.id),
+        );
+      }
+    }
+
+    if (userCollections.length) {
+      await this.userCollectionsRepo.delete(userCollections.map((uc) => uc.id));
+    }
+
     await this.collectionTypeFieldsRepo.delete({ collection_type_id: { id: typeId } });
     await this.collectionTypesRepo.delete(typeId);
   }
