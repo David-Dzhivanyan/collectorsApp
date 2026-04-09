@@ -47,6 +47,9 @@ export class CollectionService {
 
     @InjectRepository(CollectionItemValuesEntity)
     private readonly collectionItemValuesRepo: Repository<CollectionItemValuesEntity>,
+
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -651,5 +654,69 @@ export class CollectionService {
           `Неизвестный тип поля: ${String(fieldType)}`,
         )
     }
+  }
+
+  // ─── Stats ───────────────────────────────────────────────────────────────────
+
+  async getStats(): Promise<{
+    users: number
+    collectionTypes: number
+    collections: number
+    items: number
+  }> {
+    const [users, collectionTypes, collections, items] = await Promise.all([
+      this.userRepo.count(),
+      this.collectionTypesRepo.count(),
+      this.userCollectionsRepo.count(),
+      this.collectionItemsRepo.count(),
+    ])
+    return { users, collectionTypes, collections, items }
+  }
+
+  // ─── Search ──────────────────────────────────────────────────────────────────
+
+  async searchCollections(q: string): Promise<UserCollectionsEntity[]> {
+    return this.userCollectionsRepo
+      .createQueryBuilder('uc')
+      .leftJoinAndSelect('uc.user_id', 'user')
+      .leftJoinAndSelect('uc.collection_type_id', 'type')
+      .where('LOWER(uc.name) LIKE :q', { q: `%${q.toLowerCase()}%` })
+      .take(20)
+      .getMany()
+  }
+
+  async searchItems(q: string): Promise<
+    {
+      itemId: number
+      itemName: string
+      collectionId: number
+      collectionName: string
+      userId: number
+      userFirstName: string
+      userLastName: string
+      username: string
+    }[]
+  > {
+    if (!q.trim()) return []
+
+    const items = await this.collectionItemsRepo
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.user_collection_id', 'col')
+      .leftJoinAndSelect('col.user_id', 'user')
+      .where('LOWER(item.name) LIKE :q', { q: `%${q.toLowerCase()}%` })
+      .orderBy('item.name', 'ASC')
+      .take(15)
+      .getMany()
+
+    return items.map((item) => ({
+      itemId: item.id,
+      itemName: item.name,
+      collectionId: (item.user_collection_id as any).id,
+      collectionName: (item.user_collection_id as any).name,
+      userId: (item.user_collection_id as any).user_id.id,
+      userFirstName: (item.user_collection_id as any).user_id.firstName,
+      userLastName: (item.user_collection_id as any).user_id.lastName,
+      username: (item.user_collection_id as any).user_id.username,
+    }))
   }
 }

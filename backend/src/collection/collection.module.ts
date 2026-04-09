@@ -8,15 +8,19 @@ import { CollectionTypeFieldsEntity } from './entities/collectionTypeFields.enti
 import { UserCollectionsEntity } from './entities/userCollections.entity';
 import { CollectionItemsEntity } from './entities/collectionItems.entity';
 import { CollectionItemValuesEntity } from './entities/collectionItemValues.entity';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CollectionTypesEntity]),
-    TypeOrmModule.forFeature([FieldsEntity]),
-    TypeOrmModule.forFeature([CollectionTypeFieldsEntity]),
-    TypeOrmModule.forFeature([UserCollectionsEntity]),
-    TypeOrmModule.forFeature([CollectionItemsEntity]),
-    TypeOrmModule.forFeature([CollectionItemValuesEntity]),
+    TypeOrmModule.forFeature([
+      CollectionTypesEntity,
+      FieldsEntity,
+      CollectionTypeFieldsEntity,
+      UserCollectionsEntity,
+      CollectionItemsEntity,
+      CollectionItemValuesEntity,
+      User,
+    ]),
   ],
   providers: [CollectionService],
   controllers: [CollectionController],

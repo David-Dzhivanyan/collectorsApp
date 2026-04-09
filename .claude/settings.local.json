@@ -18,7 +18,10 @@
       "Bash(xargs cat:*)",
       "Bash(npm run:*)",
       "Bash(xargs ls:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx nuxi:*)"
     ]
   }
 }

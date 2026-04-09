@@ -15,5 +15,8 @@
   flex-grow: 1;
   padding: 16px 32px;
   width: 100%;
+
+  @include mobile { padding: 12px 16px; }
+  @include sm     { padding: 10px 12px; }
 }
 </style>

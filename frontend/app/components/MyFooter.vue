@@ -74,6 +74,9 @@ const tel = ref('')
   display: flex;
   gap: 90px;
   align-items: center;
+
+  @include tablet { gap: 32px; }
+  @include mobile { flex-direction: column; align-items: flex-start; gap: 16px; }
 }
 
 .top-text {
@@ -89,6 +92,8 @@ const tel = ref('')
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @include mobile { flex-direction: column; align-items: stretch; width: 100%; }
 }
 
 .bottom {
@@ -99,6 +104,8 @@ const tel = ref('')
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+
+  @include mobile { grid-template-columns: 1fr; }
 }
 
 .bottom-logo {

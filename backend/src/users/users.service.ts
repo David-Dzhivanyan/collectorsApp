@@ -52,6 +52,18 @@ export class UsersService {
     return this.userRepo.findOneBy({ id });
   }
 
+  async search(q: string): Promise<Omit<User, 'password'>[]> {
+    const users = await this.userRepo
+      .createQueryBuilder('user')
+      .where(
+        'LOWER(user.username) LIKE :q OR LOWER(user."firstName") LIKE :q OR LOWER(user."lastName") LIKE :q',
+        { q: `%${q.toLowerCase()}%` },
+      )
+      .take(20)
+      .getMany()
+    return users.map(({ password, ...u }) => u)
+  }
+
   async uploadAvatar(userId: number, filename: string): Promise<User> {
     await this.userRepo.update(userId, { avatar: filename });
     return this.userRepo.findOneBy({ id: userId }) as Promise<User>;

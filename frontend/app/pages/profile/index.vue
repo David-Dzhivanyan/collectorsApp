@@ -33,7 +33,8 @@ import { notify } from '@kyvg/vue3-notification'
 import { useUserStore } from '@/store/user'
 import { useUploadUrl } from '@/composables/useUploadUrl'
 
-const { currentUser, uploadAvatar, deleteAvatar } = useUserStore()
+const { currentUser } = storeToRefs(useUserStore())
+const { uploadAvatar, deleteAvatar } = useUserStore()
 const uploadUrl = useUploadUrl()
 
 const handleAvatarUpload = async (e: Event) => {

@@ -6,6 +6,7 @@ import { StringsModule } from './strings/strings.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CollectionModule } from './collection/collection.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CollectionModule } from './collection/collection.module';
     AuthModule,
     UsersModule,
     CollectionModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

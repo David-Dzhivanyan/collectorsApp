@@ -5,6 +5,7 @@ import { notify } from '@kyvg/vue3-notification'
 import { useModalStore } from '@/store/modal'
 import { useUserStore } from '@/store/user'
 import { useCollectionStore } from '@/store/collection'
+import { useChatStore } from '@/store/chat'
 
 export const useAuthStore = defineStore('auth', () => {
     const isAuth = ref<boolean>(false)
@@ -21,6 +22,11 @@ export const useAuthStore = defineStore('auth', () => {
             title: 'Вы успешно вошли!',
             type: 'success',
         })
+
+        const chatStore = useChatStore()
+        chatStore.fetchUnreadCount()
+        const { $socket } = useNuxtApp()
+        $socket.connect()
     }
 
     const logout = async () => {
@@ -31,6 +37,9 @@ export const useAuthStore = defineStore('auth', () => {
         currentUser.value = null
 
         useCollectionStore().resetState()
+        useChatStore().resetState()
+        const { $socket } = useNuxtApp()
+        $socket.disconnect()
 
         notify({
             title: 'Вы вышли!',

@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -49,6 +50,21 @@ export class CollectionController {
     @Req() req: RequestWithUser,
   ) {
     return this.collectionService.createType(dto, req.user)
+  }
+
+  @Get('stats')
+  async getStats() {
+    return this.collectionService.getStats()
+  }
+
+  @Get('search')
+  async searchCollections(@Query('q') q: string) {
+    return this.collectionService.searchCollections(q ?? '')
+  }
+
+  @Get('items/search')
+  async searchItems(@Query('q') q: string) {
+    return this.collectionService.searchItems(q ?? '')
   }
 
   @Get()

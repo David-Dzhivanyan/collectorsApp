@@ -12,6 +12,13 @@
           <h1 class="profile__name">{{ user.firstName }} {{ user.lastName }}</h1>
           <span class="profile__username">@{{ user.username }}</span>
         </div>
+        <ui-btn
+          v-if="isAuth && !isOwnProfile"
+          class="write-btn"
+          @click="startChat"
+        >
+          Написать
+        </ui-btn>
       </div>
     </div>
 
@@ -33,7 +40,7 @@
         <nuxt-link
           v-for="c in filtered"
           :key="c.id"
-          :to="`/users/${userId}/collections/${c.id}`"
+          :to="isOwnProfile ? `/my-collections/${c.id}` : `/users/${userId}/collections/${c.id}`"
           class="card"
         >
           <div class="card__body">
@@ -50,13 +57,26 @@
 <script setup lang="ts">
 import { useUserStore } from '@/store/user'
 import { useCollectionStore } from '@/store/collection'
+import { useAuthStore } from '@/store/auth'
+import { useChatStore } from '@/store/chat'
 import type { User } from '@/store/user'
 import type { UserCollection } from '@/store/collection'
 import { useUploadUrl } from '@/composables/useUploadUrl'
 
 const route = useRoute()
+const router = useRouter()
 const userId = Number(route.params.id)
 const uploadUrl = useUploadUrl()
+
+const { isAuth } = storeToRefs(useAuthStore())
+const { currentUser } = storeToRefs(useUserStore())
+const isOwnProfile = computed(() => currentUser.value?.id === userId)
+const chatStore = useChatStore()
+
+const startChat = async () => {
+  const chat = await chatStore.fetchOrCreateChat(userId)
+  router.push(`/messages/${chat.id}`)
+}
 
 const { getUsers } = useUserStore()
 const { getUserCollectionsPublic } = useCollectionStore()
@@ -102,6 +122,11 @@ onMounted(async () => {
   width: fit-content;
 
   &:hover { opacity: 1; }
+}
+
+.write-btn {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .profile {

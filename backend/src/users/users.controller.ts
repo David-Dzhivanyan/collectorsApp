@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -30,6 +31,11 @@ export class UsersController {
   @Get()
   getAll(): Promise<Omit<User, 'password'>[]> {
     return this.usersService.getAll();
+  }
+
+  @Get('search')
+  search(@Query('q') q: string) {
+    return this.usersService.search(q ?? '')
   }
 
   @Get(':id')
