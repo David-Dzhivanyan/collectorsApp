@@ -26,6 +26,23 @@
           :error-message="fieldErrors[field.id]"
           @update:model-value="fieldValues[field.id] = $event"
         />
+        <div class="photo-upload">
+          <span class="photo-upload__label">Фото</span>
+          <div v-if="createPhotoPreviewUrls.length" class="photo-upload__previews">
+            <div
+              v-for="(url, i) in createPhotoPreviewUrls"
+              :key="i"
+              class="photo-upload__preview"
+            >
+              <img :src="url" class="photo-upload__img" alt="" />
+              <button class="photo-upload__remove" @click="removeCreatePhoto(i)">×</button>
+            </div>
+          </div>
+          <label class="photo-upload__add">
+            + Добавить фото
+            <input type="file" accept="image/*" multiple hidden @change="onCreateFilesSelected" />
+          </label>
+        </div>
       </div>
       <div class="form__footer">
         <ui-btn :disabled="!form.name" @click="handleCreate">Создать</ui-btn>
@@ -47,6 +64,7 @@
         <table class="table">
           <thead>
             <tr>
+              <th>Фото</th>
               <th>Название</th>
               <th v-for="field in tableData.fields" :key="field.id">
                 {{ field.name }}
@@ -58,6 +76,20 @@
             <template v-for="item in tableData.items" :key="item.id">
               <!-- Normal row -->
               <tr class="data-row" :class="{ 'data-row--editing': editingItemId === item.id }">
+                <td class="col-photo">
+                  <template v-if="item.photos?.length">
+                    <div
+                      class="photo-thumb"
+                      @click="openLightbox(item.photos.map(f => uploadUrl(f)), 0)"
+                    >
+                      <img :src="uploadUrl(item.photos[0])" class="photo-thumb__img" alt="" />
+                      <span v-if="item.photos.length > 1" class="photo-thumb__badge">
+                        {{ item.photos.length }}
+                      </span>
+                    </div>
+                  </template>
+                  <template v-else>—</template>
+                </td>
                 <td>{{ item.name }}</td>
                 <td v-for="field in tableData.fields" :key="field.id">
                   <template v-if="field.field_type === 'boolean'">
@@ -91,7 +123,7 @@
 
               <!-- Edit row (inline expanded) -->
               <tr v-if="editingItemId === item.id" class="edit-row">
-                <td :colspan="tableData.fields.length + 2">
+                <td :colspan="tableData.fields.length + 3">
                   <div class="edit-panel">
                     <div class="edit-panel__fields">
                       <ui-text-field v-model="editForm.name" label="Название *" />
@@ -104,6 +136,42 @@
                         :error-message="editFieldErrors[field.id]"
                         @update:model-value="editFieldValues[field.id] = $event"
                       />
+                      <!-- Photos in edit mode -->
+                      <div class="photo-upload">
+                        <span class="photo-upload__label">Фото</span>
+                        <!-- Existing saved photos -->
+                        <div
+                          v-if="tableData.items.find(i => i.id === editingItemId)?.photos?.length"
+                          class="photo-upload__previews"
+                        >
+                          <div
+                            v-for="filename in tableData.items.find(i => i.id === editingItemId)!.photos"
+                            :key="filename"
+                            class="photo-upload__preview"
+                          >
+                            <img :src="uploadUrl(filename)" class="photo-upload__img" alt="" />
+                            <button
+                              class="photo-upload__remove"
+                              @click="deleteExistingPhoto(editingItemId!, filename)"
+                            >×</button>
+                          </div>
+                        </div>
+                        <!-- New photos staged for upload -->
+                        <div v-if="editPhotoPreviewUrls.length" class="photo-upload__previews">
+                          <div
+                            v-for="(url, i) in editPhotoPreviewUrls"
+                            :key="i"
+                            class="photo-upload__preview photo-upload__preview--new"
+                          >
+                            <img :src="url" class="photo-upload__img" alt="" />
+                            <button class="photo-upload__remove" @click="removeEditPhoto(i)">×</button>
+                          </div>
+                        </div>
+                        <label class="photo-upload__add">
+                          + Добавить фото
+                          <input type="file" accept="image/*" multiple hidden @change="onEditFilesSelected" />
+                        </label>
+                      </div>
                     </div>
                     <div class="edit-panel__footer">
                       <ui-btn :disabled="!editForm.name" @click="saveEditItem(item.id)">Сохранить</ui-btn>
@@ -117,15 +185,25 @@
         </table>
       </div>
     </template>
+
+    <item-photo-lightbox
+      v-if="lightboxOpen"
+      :photos="lightboxPhotos"
+      :initial-index="lightboxIndex"
+      @close="lightboxOpen = false"
+    />
   </container>
 </template>
 
 <script setup lang="ts">
+import { notify } from '@kyvg/vue3-notification'
 import { useCollectionStore } from '@/store/collection'
+import { useUploadUrl } from '@/composables/useUploadUrl'
 import type { CollectionTableResponse, CollectionTableItem } from '@/store/collection'
 
 const route = useRoute()
 const collectionStore = useCollectionStore()
+const uploadUrl = useUploadUrl()
 
 const id = Number(route.params.id)
 const loading = ref(true)
@@ -138,18 +216,72 @@ const collectionTypeName = ref('')
 const form = ref({ name: '' })
 const fieldValues = ref<Record<number, unknown>>({})
 const fieldErrors = ref<Record<number, string>>({})
+const createPhotos = ref<File[]>([])
+const createPhotoPreviewUrls = ref<string[]>([])
 
 // Edit form
 const editingItemId = ref<number | null>(null)
 const editForm = ref({ name: '' })
 const editFieldValues = ref<Record<number, unknown>>({})
 const editFieldErrors = ref<Record<number, string>>({})
+const editPhotos = ref<File[]>([])
+const editPhotoPreviewUrls = ref<string[]>([])
+
+// Lightbox
+const lightboxPhotos = ref<string[]>([])
+const lightboxIndex = ref(0)
+const lightboxOpen = ref(false)
 
 const { userCollections, currentUserCollection } = storeToRefs(collectionStore)
 
 const loadTable = async () => {
   tableData.value = await collectionStore.getCollectionTable(id)
 }
+
+// ─── Photo helpers ───────────────────────────────────────────────────────────
+
+const openLightbox = (photos: string[], index: number) => {
+  lightboxPhotos.value = photos
+  lightboxIndex.value = index
+  lightboxOpen.value = true
+}
+
+const onCreateFilesSelected = (e: Event) => {
+  const files = Array.from((e.target as HTMLInputElement).files ?? [])
+  createPhotos.value = [...createPhotos.value, ...files]
+  files.forEach((f) => createPhotoPreviewUrls.value.push(URL.createObjectURL(f)))
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+const removeCreatePhoto = (index: number) => {
+  URL.revokeObjectURL(createPhotoPreviewUrls.value[index])
+  createPhotoPreviewUrls.value.splice(index, 1)
+  createPhotos.value.splice(index, 1)
+}
+
+const onEditFilesSelected = (e: Event) => {
+  const files = Array.from((e.target as HTMLInputElement).files ?? [])
+  editPhotos.value = [...editPhotos.value, ...files]
+  files.forEach((f) => editPhotoPreviewUrls.value.push(URL.createObjectURL(f)))
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+const removeEditPhoto = (index: number) => {
+  URL.revokeObjectURL(editPhotoPreviewUrls.value[index])
+  editPhotoPreviewUrls.value.splice(index, 1)
+  editPhotos.value.splice(index, 1)
+}
+
+const deleteExistingPhoto = async (itemId: number, filename: string) => {
+  try {
+    await collectionStore.deleteItemPhoto(itemId, filename)
+    await loadTable()
+  } catch {
+    notify({ title: 'Не удалось удалить фото', type: 'error' })
+  }
+}
+
+// ─── CRUD ────────────────────────────────────────────────────────────────────
 
 const validateFields = (values: Record<number, unknown>, errors: Record<number, string>): boolean => {
   let valid = true
@@ -192,10 +324,21 @@ const handleCreate = async () => {
         await collectionStore.createItemValue({ collection_item_id: item.id, field_id: field.id, value })
       }
     }
+    for (const file of createPhotos.value) {
+      try {
+        await collectionStore.uploadItemPhoto(item.id, file)
+      } catch {
+        notify({ title: `Не удалось загрузить фото ${file.name}`, type: 'error' })
+      }
+    }
   }
+
   form.value.name = ''
   fieldValues.value = {}
   fieldErrors.value = {}
+  createPhotos.value = []
+  createPhotoPreviewUrls.value.forEach((url) => URL.revokeObjectURL(url))
+  createPhotoPreviewUrls.value = []
   isFormOpen.value = false
   await loadTable()
 }
@@ -205,6 +348,8 @@ const startEditItem = (item: CollectionTableItem) => {
   editForm.value.name = item.name
   editFieldValues.value = {}
   editFieldErrors.value = {}
+  editPhotos.value = []
+  editPhotoPreviewUrls.value = []
   for (const field of tableData.value?.fields ?? []) {
     const raw = item.values[String(field.id)]
     editFieldValues.value[field.id] = raw !== undefined ? raw : (field.field_type === 'boolean' ? false : '')
@@ -216,27 +361,40 @@ const cancelEditItem = () => {
   editForm.value.name = ''
   editFieldValues.value = {}
   editFieldErrors.value = {}
+  editPhotos.value = []
+  editPhotoPreviewUrls.value.forEach((url) => URL.revokeObjectURL(url))
+  editPhotoPreviewUrls.value = []
 }
 
 const saveEditItem = async (itemId: number) => {
   editFieldErrors.value = {}
   if (!validateFields(editFieldValues.value, editFieldErrors.value)) return
 
+  const filesToUpload = [...editPhotos.value]
+
   const values = (tableData.value?.fields ?? [])
-    .map(field => ({ field_id: field.id, value: editFieldValues.value[field.id] }))
-    .filter(v => v.value !== undefined && v.value !== null && v.value !== '')
+    .map((field) => ({ field_id: field.id, value: editFieldValues.value[field.id] }))
+    .filter((v) => v.value !== undefined && v.value !== null && v.value !== '')
 
   await collectionStore.updateCollectionItem(itemId, {
     name: editForm.value.name,
     values,
   })
 
+  for (const file of filesToUpload) {
+    try {
+      await collectionStore.uploadItemPhoto(itemId, file)
+    } catch {
+      notify({ title: `Не удалось загрузить фото ${file.name}`, type: 'error' })
+    }
+  }
+
   cancelEditItem()
   await loadTable()
 }
 
 onMounted(async () => {
-  const match = userCollections.value?.find(c => c.id === id)
+  const match = userCollections.value?.find((c) => c.id === id)
   if (match) {
     currentUserCollection.value = match
     collectionName.value = match.name
@@ -405,6 +563,11 @@ onMounted(async () => {
   text-align: center;
 }
 
+.col-photo {
+  width: 64px;
+  text-align: center;
+}
+
 .row-actions {
   display: flex;
   gap: 2px;
@@ -436,6 +599,117 @@ onMounted(async () => {
   &--danger:hover {
     color: $red400;
     background: rgba(220, 53, 69, 0.08);
+  }
+}
+
+// ─── Photo thumb in table ───────────────────────────────────────────────────
+
+.photo-thumb {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 44px;
+  height: 44px;
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 1px 4px;
+    line-height: 1.4;
+  }
+}
+
+// ─── Photo upload in forms ──────────────────────────────────────────────────
+
+.photo-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $gray600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  &__previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__preview {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1.5px solid $gray300;
+    flex-shrink: 0;
+
+    &--new {
+      border-color: $primary;
+    }
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(220, 53, 69, 0.8);
+    }
+  }
+
+  &__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: $primary;
+    cursor: pointer;
+    width: fit-content;
+
+    &:hover {
+      opacity: 0.75;
+    }
   }
 }
 </style>

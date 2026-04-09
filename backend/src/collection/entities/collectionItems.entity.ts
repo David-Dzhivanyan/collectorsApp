@@ -21,4 +21,7 @@ export class CollectionItemsEntity {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
+
+  @Column({ type: 'simple-array', nullable: true, default: '' })
+  photos: string[];
 }

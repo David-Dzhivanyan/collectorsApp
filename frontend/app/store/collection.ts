@@ -68,6 +68,7 @@ export type CollectionTableItem = {
   id: number
   name: string
   created_at: string
+  photos: string[]
   values: Record<string, any>
 }
 
@@ -127,8 +128,22 @@ export const useCollectionStore = defineStore('collection', () => {
   const getUserCollections = async (userId: number) => {
     const { $axios } = useNuxtApp()
 
-    const { data } = await $axios.get<UserCollection[]>(`/collection/user/${userId}`)
+    const { data } = await $axios.get<UserCollection[]>(`/collection/user/my`)
     userCollections.value = data
+  }
+
+  const getUserCollectionsPublic = async (userId: number): Promise<UserCollection[]> => {
+    const { $axios } = useNuxtApp()
+    const { data } = await $axios.get<UserCollection[]>(`/collection/user/${userId}`)
+    return data
+  }
+
+  const getCollectionTablePublic = async (userCollectionId: number): Promise<CollectionTableResponse> => {
+    const { $axios } = useNuxtApp()
+    const { data } = await $axios.get<CollectionTableResponse>(
+      `/collection/user-collection/${userCollectionId}/table/public`,
+    )
+    return data
   }
 
   const getCollectionItems = async (userCollectionId: number) => {
@@ -285,6 +300,23 @@ export const useCollectionStore = defineStore('collection', () => {
     await $axios.delete(`/collection/field/${fieldId}`)
   }
 
+  const uploadItemPhoto = async (itemId: number, file: File): Promise<string | null> => {
+    const { $axios } = useNuxtApp()
+    const formData = new FormData()
+    formData.append('file', file)
+    const { data } = await $axios.post<{ filename: string }>(
+      `/collection/item/${itemId}/photo`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
+    return data.filename
+  }
+
+  const deleteItemPhoto = async (itemId: number, filename: string): Promise<void> => {
+    const { $axios } = useNuxtApp()
+    await $axios.delete(`/collection/item/${itemId}/photo/${filename}`)
+  }
+
   const resetState = () => {
     collectionTypeList.value = null
     fieldsList.value = null
@@ -326,6 +358,10 @@ export const useCollectionStore = defineStore('collection', () => {
     updateCollectionItem,
     updateField,
     deleteField,
+    uploadItemPhoto,
+    deleteItemPhoto,
+    getUserCollectionsPublic,
+    getCollectionTablePublic,
     resetState,
   }
 })

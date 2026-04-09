@@ -51,4 +51,13 @@ export class UsersService {
   async findOne(id: number): Promise<User | null> {
     return this.userRepo.findOneBy({ id });
   }
+
+  async uploadAvatar(userId: number, filename: string): Promise<User> {
+    await this.userRepo.update(userId, { avatar: filename });
+    return this.userRepo.findOneBy({ id: userId }) as Promise<User>;
+  }
+
+  async deleteAvatar(userId: number): Promise<void> {
+    await this.userRepo.update(userId, { avatar: undefined });
+  }
 }

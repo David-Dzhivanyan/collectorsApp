@@ -5,13 +5,24 @@
       <ui-btn @click="handleCreateUserCollection">Создать</ui-btn>
     </template>
 
+    <input
+      v-model="search"
+      class="search"
+      type="text"
+      placeholder="Поиск по названию..."
+    />
+
     <div v-if="!userCollections || userCollections.length === 0" class="empty">
       У вас пока нет коллекций
     </div>
 
+    <div v-else-if="filtered.length === 0" class="empty">
+      Ничего не найдено
+    </div>
+
     <div v-else class="list">
       <div
-        v-for="collection in userCollections"
+        v-for="collection in filtered"
         :key="collection.id"
         class="card"
         :class="{ 'card--editing': editingId === collection.id }"
@@ -66,6 +77,13 @@ const { open } = useModalStore()
 
 const editingId = ref<number | null>(null)
 const editName = ref('')
+const search = ref('')
+
+const filtered = computed(() =>
+  (userCollections.value ?? []).filter((c) =>
+    c.name.toLowerCase().includes(search.value.toLowerCase()),
+  ),
+)
 
 const handleCreateUserCollection = () => {
   open('createUserCollection')
@@ -217,6 +235,28 @@ watch(currentUser, async () => {
   &--danger:hover {
     color: $red400;
     background: rgba(220, 53, 69, 0.08);
+  }
+}
+
+.search {
+  width: 100%;
+  padding: 9px 14px;
+  border: 1px solid $gray300;
+  border-radius: 8px;
+  font-size: 14px;
+  color: $gray900;
+  background: $white;
+  outline: none;
+  margin-bottom: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &::placeholder {
+    color: $gray600;
+  }
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba(132, 88, 255, 0.12);
   }
 }
 

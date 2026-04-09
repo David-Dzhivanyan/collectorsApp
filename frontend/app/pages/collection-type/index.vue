@@ -6,9 +6,18 @@
         <ui-btn v-if="isAuth" @click="handleCreateType">Создать</ui-btn>
       </template>
 
+      <input
+        v-model="search"
+        class="search"
+        type="text"
+        placeholder="Поиск по названию..."
+      />
+
       <div v-if="loading" class="state">Загрузка...</div>
 
       <div v-else-if="!rows || rows.length === 0" class="state">Нет типов коллекций</div>
+
+      <div v-else-if="filtered.length === 0" class="state">Ничего не найдено</div>
 
       <div v-else class="table-wrap">
         <table class="table">
@@ -22,7 +31,7 @@
             </tr>
           </thead>
           <tbody>
-            <template v-for="row in rows" :key="row.id">
+            <template v-for="row in filtered" :key="row.id">
               <tr class="main-row" @click="toggleExpanded(row.id)">
                 <td class="cell-name">
                   <span class="expand-icon">{{ expandedId === row.id ? '▾' : '▸' }}</span>
@@ -80,6 +89,7 @@
 </template>
 
 <script setup lang="ts">
+import { notify } from '@kyvg/vue3-notification'
 import { useCollectionStore } from '@/store/collection'
 import type { CollectionTypeTableRow } from '@/store/collection'
 import { useModalStore } from '@/store/modal'
@@ -94,6 +104,13 @@ const loading = ref(true)
 const rows = ref<CollectionTypeTableRow[]>([])
 const expandedId = ref<number | null>(null)
 const addFieldState = ref<Record<number, number | null>>({})
+const search = ref('')
+
+const filtered = computed(() =>
+  rows.value.filter((r) =>
+    r.name.toLowerCase().includes(search.value.toLowerCase()),
+  ),
+)
 
 const handleCreateType = () => open('createType')
 
@@ -113,8 +130,12 @@ const availableFieldOptions = (row: CollectionTypeTableRow) => {
 }
 
 const handleDeleteType = async (typeId: number) => {
-  await collectionStore.deleteCollectionType(typeId)
-  await loadTable()
+  try {
+    await collectionStore.deleteCollectionType(typeId)
+    await loadTable()
+  } catch (e: any) {
+    notify({ title: e?.response?.data?.message ?? 'Не удалось удалить тип коллекции', type: 'error' })
+  }
 }
 
 const handleRemoveField = async (collectionTypeFieldId: number, typeId: number) => {
@@ -146,6 +167,28 @@ watch(() => collectionStore.collectionTypeList, async () => {
 </script>
 
 <style scoped lang="scss">
+.search {
+  width: 100%;
+  padding: 9px 14px;
+  border: 1px solid $gray300;
+  border-radius: 8px;
+  font-size: 14px;
+  color: $gray900;
+  background: $white;
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &::placeholder {
+    color: $gray600;
+  }
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba(132, 88, 255, 0.12);
+  }
+}
+
 .state {
   text-align: center;
   color: $gray600;

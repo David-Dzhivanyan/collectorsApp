@@ -15,7 +15,10 @@
       "Bash(git commit -m 'feat: field type validation — backend ValidationPipe + type-aware normalize, frontend smart field inputs:*)",
       "Bash(git commit -m 'fix: correct @IsString\\(\\) to @IsNumber\\(\\) on all numeric DTO fields after enabling ValidationPipe:*)",
       "Bash(PGPASSWORD=password psql:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(npm run:*)",
+      "Bash(xargs ls:*)",
+      "Bash(grep:*)"
     ]
   }
 }

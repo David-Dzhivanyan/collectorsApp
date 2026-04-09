@@ -22,7 +22,7 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .layout {
-  min-height: 100vh;
+  min-height: max(1000px, 100vh);
 }
 
 .content {
@@ -30,6 +30,6 @@ onMounted(async () => {
   flex-direction: column;
   justify-content: space-between;
   width: 100%;
-  min-height: 100vh;
+  min-height: max(1000px, 100vh);
 }
 </style>

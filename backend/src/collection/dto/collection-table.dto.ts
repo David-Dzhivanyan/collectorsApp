@@ -10,6 +10,7 @@ export interface CollectionTableItemDto {
   id: number;
   name: string;
   created_at: Date;
+  photos: string[];
   values: Record<string, any>;
 }
 
